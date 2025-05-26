@@ -15,7 +15,7 @@ This implementation plan outlines the steps to build the A1C Estimator applicati
 - **Framework**: NestJS
 - **Database**: PostgreSQL
 - **ORM**: Prisma
-- **Authentication**: JWT-based authentication with Passport.js
+- **Authentication**: Clerk for passwordless authentication with magic links and passkeys
 - **Hosting**: Vercel for frontend, AWS (EC2, ECS) for backend API
 
 ## Database Schema (Prisma)
@@ -33,6 +33,7 @@ generator client {
 
 model User {
   id            String    @id @default(uuid())
+  clerkId       String    @unique
   email         String    @unique
   name          String?
   createdAt     DateTime  @default(now())
@@ -102,33 +103,34 @@ a1c-project/
 └── nx.json               # Nx monorepo configuration
 ```
 
-## Authentication Implementation (JWT with NestJS)
+## Authentication Implementation (Clerk with Magic Links and Passkeys)
 
-1. **Setup NestJS Authentication**
-   - Implement JWT-based authentication with Passport.js
-   - Configure JWT secret and token expiration
-   - Create authentication guards for protected routes
-   - Implement password hashing with bcrypt
+1. **Setup Clerk Authentication**
+   - Implement passwordless authentication with magic links
+   - Configure passkey (WebAuthn) authentication
+   - Set up Clerk webhooks for user events
+   - Create authentication guards for protected routes in NestJS
 
 2. **Integration with Next.js Frontend**
-   - Create authentication context in React
-   - Implement authentication hooks for sign-in, sign-up, and sign-out
-   - Store JWT token securely in browser storage
-   - Implement protected routes using React context
+   - Use Clerk's React components and hooks
+   - Implement sign-in and sign-up flows with magic links
+   - Add passkey registration and authentication
+   - Implement protected routes using Clerk's authentication state
 
 3. **Authentication Components**
-   - Create login form component
-   - Create registration form component
-   - Create password reset components
-   - Implement authentication state management
+   - Use Clerk's pre-built authentication components
+   - Customize the authentication UI to match application design
+   - Implement seamless authentication flows
+   - Add multi-factor authentication options
 
 ## Core Features Implementation
 
 ### User Management
 1. **User Registration and Login**
-   - Implement registration form with email verification
-   - Create login functionality using AWS Cognito
-   - Add password reset functionality
+   - Implement passwordless registration with magic links
+   - Add passkey (WebAuthn) authentication support
+   - Create seamless login experience with no passwords
+   - Implement account recovery options
 
 2. **User Profile**
    - Allow users to view and edit their profile information
@@ -167,11 +169,13 @@ a1c-project/
 ## API Routes (NestJS)
 
 ### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login existing user
-- `POST /api/auth/refresh` - Refresh JWT token
-- `POST /api/auth/forgot-password` - Initiate password reset
-- `POST /api/auth/reset-password` - Complete password reset
+- Clerk handles all authentication endpoints:
+  - Magic link authentication
+  - Passkey (WebAuthn) registration and authentication
+  - Session management
+  - User profile management
+- `POST /api/auth/webhook` - Webhook endpoint for Clerk events
+- `GET /api/auth/session` - Verify session and get user data
 
 ### User Profile
 - `GET /api/users/profile` - Get user profile
@@ -231,7 +235,7 @@ a1c-project/
 
 3. Install necessary dependencies:
    ```bash
-   npm install @nestjs/jwt @nestjs/passport passport passport-jwt passport-local bcrypt prisma @prisma/client axios react-hook-form
+   npm install @clerk/clerk-sdk-node @clerk/nextjs @clerk/nestjs prisma @prisma/client axios react-hook-form
    ```
 
 ### Prisma Setup
@@ -250,28 +254,25 @@ a1c-project/
    npx prisma migrate dev --name init
    ```
 
-### NestJS Authentication Setup
-1. Configure JWT in NestJS:
+### Clerk Authentication Setup
+1. Configure Clerk in NestJS:
    ```typescript
    // api/src/app/auth/auth.module.ts
    import { Module } from '@nestjs/common';
-   import { JwtModule } from '@nestjs/jwt';
-   import { PassportModule } from '@nestjs/passport';
+   import { ClerkModule } from '@clerk/nestjs';
    import { AuthService } from './auth.service';
    import { AuthController } from './auth.controller';
-   import { JwtStrategy } from './strategies/jwt.strategy';
    import { UsersModule } from '../users/users.module';
 
    @Module({
      imports: [
        UsersModule,
-       PassportModule,
-       JwtModule.register({
-         secret: process.env.JWT_SECRET,
-         signOptions: { expiresIn: '1d' },
+       ClerkModule.forRoot({
+         publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+         secretKey: process.env.CLERK_SECRET_KEY,
        }),
      ],
-     providers: [AuthService, JwtStrategy],
+     providers: [AuthService],
      controllers: [AuthController],
      exports: [AuthService],
    })
@@ -282,18 +283,28 @@ a1c-project/
    ```typescript
    // api/src/app/auth/auth.service.ts
    import { Injectable } from '@nestjs/common';
-   import { JwtService } from '@nestjs/jwt';
+   import { ClerkClient } from '@clerk/clerk-sdk-node';
    import { UsersService } from '../users/users.service';
-   import * as bcrypt from 'bcrypt';
 
    @Injectable()
    export class AuthService {
      constructor(
        private usersService: UsersService,
-       private jwtService: JwtService,
      ) {}
 
-     async validateUser(email: string, password: string): Promise<any> {
+     async validateSession(sessionId: string) {
+       try {
+         const session = await ClerkClient.sessions.getSession(sessionId);
+         if (session.status === 'active') {
+           return this.usersService.findByClerkId(session.userId);
+         }
+         return null;
+       } catch (error) {
+         return null;
+       }
+     }
+   }
+   ```ateUser(email: string, password: string): Promise<any> {
        const user = await this.usersService.findByEmail(email);
        if (user && await bcrypt.compare(password, user.password)) {
          const { password, ...result } = user;
@@ -410,6 +421,7 @@ a1c-project/
 2. Configure production database
 3. Set up proper logging and monitoring
 4. Implement database backup strategy
-5. Configure JWT secrets and token management for production
-6. Deploy NestJS backend to AWS (EC2, ECS, or EKS)
-7. Deploy Next.js frontend to Vercel or AWS
+5. Configure Clerk production environment and API keys
+6. Set up Clerk webhooks for production environment
+7. Deploy NestJS backend to AWS (EC2, ECS, or EKS)
+8. Deploy Next.js frontend to Vercel or AWS
