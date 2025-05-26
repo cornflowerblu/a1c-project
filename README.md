@@ -1,96 +1,163 @@
-# 
+# A1C Project - Nx Monorepo with NestJS API and NextJS Web
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+This project demonstrates a modern full-stack application architecture using Nx for monorepo management, NestJS for the backend API, and NextJS for the frontend web application.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Project Structure
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-## Run tasks
-
-To run tasks with Nx use:
-
-```sh
-npx nx <target> <project-name>
+```
+a1c-project/
+├── api/                  # NestJS API backend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── auth/     # Authentication module
+│   │   │   └── users/    # Users module
+│   │   └── main.ts       # API entry point
+├── web/                  # NextJS frontend
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── api/      # API client functions
+│   │   │   ├── components/
+│   │   │   ├── context/  # React context providers
+│   │   │   └── page.tsx  # Main page
+├── shared/               # Shared libraries
+│   ├── api-interfaces/   # Shared API interfaces
+│   ├── auth/             # Authentication utilities
+│   └── environments/     # Environment configuration
+└── .env                  # Environment variables
 ```
 
-For example:
+## Features
 
-```sh
-npx nx build myproject
+- **Monorepo Architecture**: Efficiently manage multiple applications and shared libraries in a single repository
+- **Type Safety**: Full TypeScript support across frontend and backend with shared interfaces
+- **Authentication**: JWT-based authentication with protected routes
+- **API Communication**: Structured API client with shared interfaces
+- **Environment Configuration**: Centralized environment management
+- **Component Library**: Reusable React components
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v16+)
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/a1c-project.git
+cd a1c-project
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Development
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Start the API development server
+npx nx serve api
 
-## Add new projects
+# Start the web development server (in a separate terminal)
+npx nx dev web
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
+# Or run both simultaneously
+npx nx run-many --target=serve --projects=api --target=dev --projects=web --parallel=2
 ```
 
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
+### Building for Production
 
-```sh
-# Generate an app
-npx nx g @nx/react:app demo
+```bash
+# Build the API
+npx nx build api
 
-# Generate a library
-npx nx g @nx/react:lib some-lib
+# Build the web application
+npx nx build web
+
+# Build both applications
+npx nx run-many --target=build --projects=api,web --parallel=2
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### Testing
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+```bash
+# Run API tests
+npx nx test api
 
-## Set up CI!
+# Run web tests
+npx nx test web
 
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+# Run all tests
+npx nx run-many --target=test --all
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+## Authentication
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+The application includes a complete authentication system:
 
-### Step 2
+### Backend (NestJS)
+- JWT-based authentication with Passport.js
+- Protected routes using Guards
+- User service (currently using mock data)
 
-Use the following command to configure a CI workflow for your workspace:
+### Frontend (NextJS)
+- Authentication context for state management
+- Login form component
+- Protected routes with automatic redirection
+- User profile display
 
-```sh
-npx nx g ci-workflow
+### Test Users
+
+For development and testing purposes, the API includes two default users:
+
+1. **Admin User**
+   - Email: admin@example.com
+   - Password: admin123
+   - Role: admin
+
+2. **Regular User**
+   - Email: user@example.com
+   - Password: user123
+   - Role: user
+
+## Environment Variables
+
+The application uses the following environment variables:
+
+```
+# API Configuration
+PORT=3333
+JWT_SECRET=your-super-secret-key-change-in-production
+NODE_ENV=development
+
+# Frontend Configuration
+FRONTEND_URL=http://localhost:4200
+API_URL=http://localhost:3333/api
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Technologies Used
 
-## Install Nx Console
+- [Nx](https://nx.dev/) - Monorepo management and build system
+- [NestJS](https://nestjs.com/) - Progressive Node.js framework for building server-side applications
+- [NextJS](https://nextjs.org/) - React framework for production-grade applications
+- [Passport](https://www.passportjs.org/) - Authentication middleware for Node.js
+- [JWT](https://jwt.io/) - JSON Web Tokens for secure authentication
+- [React](https://reactjs.org/) - JavaScript library for building user interfaces
+- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## Future Enhancements
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Database integration (PostgreSQL, MongoDB)
+- User registration functionality
+- Role-based access control
+- Additional API endpoints
+- Enhanced frontend components
+- Comprehensive test coverage
 
-## Useful links
+## License
 
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+MIT
