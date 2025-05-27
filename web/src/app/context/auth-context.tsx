@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   isLoggedIn: boolean;
   logout: () => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
   error: string | null;
 }
 
@@ -120,10 +121,26 @@ const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
     }
   };
 
+  const handleLogin = async (credentials: { email: string; password: string }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // Since we're using Clerk, this is just a placeholder
+      // In a real implementation, you would integrate with Clerk's signIn method
+      console.log('Login attempted with:', credentials);
+      setError('Direct login with email/password is not supported when using Clerk');
+      setIsLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isLoading: isLoading || !isClerkLoaded,
     isLoggedIn: !!user,
+    login: handleLogin,
     logout: handleLogout,
     error,
   };
