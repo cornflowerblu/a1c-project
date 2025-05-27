@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAuth } from '../context/auth-context';
 import { useRouter } from 'next/navigation';
+import { useAuth as useClerkAuth } from '@clerk/nextjs';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,15 +11,16 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isLoggedIn, isLoading } = useAuth();
+  const { isLoaded: isClerkLoaded, isSignedIn } = useClerkAuth();
   const router = useRouter();
 
   React.useEffect(() => {
-    if (!isLoading && !isLoggedIn) {
-      router.push('/login');
+    if (isClerkLoaded && !isSignedIn) {
+      router.push('/sign-in');
     }
-  }, [isLoading, isLoggedIn, router]);
+  }, [isClerkLoaded, isSignedIn, router]);
 
-  if (isLoading) {
+  if (isLoading || !isClerkLoaded) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -26,7 +28,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isLoggedIn) {
+  if (!isSignedIn) {
     return null;
   }
 

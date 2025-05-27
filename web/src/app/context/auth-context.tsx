@@ -1,17 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginRequest, RegisterRequest } from '../../../../shared/api-interfaces/src';
-import { login, register } from '../api/auth';
-import { isAuthenticated, getToken, logout as authLogout } from '../../../../shared/auth/src';
+import { User } from '../../../../shared/api-interfaces/src';
+import { useAuth as useClerkAuth, useUser } from '@clerk/nextjs';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isLoggedIn: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   error: string | null;
 }
 
@@ -21,67 +18,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
+  const { user: clerkUser } = useUser();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Check if user is already logged in with Clerk
     const checkAuth = async () => {
       try {
-        if (isAuthenticated()) {
-          // In a real app, you would validate the token with the server
-          // and get the current user data
-          setIsLoading(false);
-        } else {
-          setUser(null);
+        if (isClerkLoaded) {
+          if (userId && clerkUser) {
+            // Map Clerk user to our User type
+            setUser({
+              id: userId,
+              email: clerkUser.primaryEmailAddress?.emailAddress || '',
+              name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+              role: clerkUser.publicMetadata?.role as any || 'user',
+              createdAt: new Date(clerkUser.createdAt),
+              updatedAt: new Date(clerkUser.updatedAt),
+            });
+          } else {
+            setUser(null);
+          }
           setIsLoading(false);
         }
       } catch (err) {
         setUser(null);
+        setError(err instanceof Error ? err.message : 'Authentication error');
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, []);
+  }, [isClerkLoaded, userId, clerkUser]);
 
-  const handleLogin = async (credentials: LoginRequest) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const handleLogout = async () => {
     try {
-      const user = await login(credentials);
-      setUser(user);
+      await signOut();
+      setUser(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
+      setError(err instanceof Error ? err.message : 'Logout failed');
     }
-  };
-
-  const handleRegister = async (userData: RegisterRequest) => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const user = await register(userData);
-      setUser(user);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
-    authLogout();
-    setUser(null);
   };
 
   const value = {
     user,
-    isLoading,
+    isLoading: isLoading || !isClerkLoaded,
     isLoggedIn: !!user,
-    login: handleLogin,
-    register: handleRegister,
     logout: handleLogout,
     error,
   };
