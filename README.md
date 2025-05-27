@@ -198,7 +198,7 @@ const isProduction = this.configService.isProduction;
 
 ## Future Enhancements
 
-- Database integration (PostgreSQL, MongoDB)
+- Database integration (PostgreSQL)
 - User registration functionality
 - Role-based access control
 - Additional API endpoints
