@@ -1,53 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { User, UserRole } from '../../../../shared/api-interfaces/src';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../database/prisma.service';
 
 @Injectable()
 export class UsersService {
-  // In-memory users for demo purposes
-  // In a real application, you would use a database
-  private readonly users: User[] = [
-    {
-      id: '1',
-      email: 'admin@example.com',
-      name: 'Admin User',
-      role: UserRole.ADMIN,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '2',
-      email: 'user@example.com',
-      name: 'Regular User',
-      role: UserRole.USER,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ];
-
-  // In-memory password storage (not for production)
-  private readonly passwords: Record<string, string> = {
-    '1': '$2b$10$8KVj4VlGO4TQNJHnVMF7UOIFVTtjYIHGKIwWqz.Yx8zIHTQVxvjJu', // 'admin123'
-    '2': '$2b$10$8KVj4VlGO4TQNJHnVMF7UOIFVTtjYIHGKIwWqz.Yx8zIHTQVxvjJu', // 'user123'
-  };
+  constructor(private prisma: PrismaService) {}
 
   async findOne(id: string): Promise<User | undefined> {
-    return this.users.find(user => user.id === id);
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
-    return this.users.find(user => user.email === email);
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.findByEmail(email);
     
-    if (!user) {
+    if (!user || !user.password) {
       return null;
     }
     
-    const storedPassword = this.passwords[user.id];
-    const isPasswordValid = await bcrypt.compare(password, storedPassword);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     
     if (!isPasswordValid) {
       return null;
@@ -57,6 +36,32 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return this.users;
+    return this.prisma.user.findMany();
+  }
+
+  async create(data: { email: string; name: string; password?: string; role?: UserRole }): Promise<User> {
+    const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : null;
+    
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        name: data.name || '',
+        password: hashedPassword,
+        role: data.role || UserRole.USER,
+      },
+    });
+  }
+
+  async update(id: string, data: Partial<User>): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async delete(id: string): Promise<User> {
+    return this.prisma.user.delete({
+      where: { id },
+    });
   }
 }
