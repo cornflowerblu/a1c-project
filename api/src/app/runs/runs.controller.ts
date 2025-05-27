@@ -1,28 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { RunsService } from './runs.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
-// Define DTOs
-enum RunStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-}
-
-interface CreateRunDto {
-  name: string;
-  description?: string;
-  userId: string;
-}
-
-interface UpdateRunDto {
-  name?: string;
-  description?: string;
-  status?: RunStatus;
-  startedAt?: Date;
-  completedAt?: Date;
-}
+import { CreateRunDto, UpdateRunDto, RunStatus } from '@./api-interfaces';
 
 @Controller('runs')
 export class RunsController {
@@ -30,51 +9,107 @@ export class RunsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Query('userId') userId?: string) {
-    return this.runsService.findAll(userId);
+  async findAll(
+    @Query('userId', new ParseUUIDPipe({ version: '4', optional: true })) userId?: string
+  ) {
+    try {
+      return await this.runsService.findAll(userId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to retrieve runs');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.runsService.findOne(id);
+  async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    try {
+      return await this.runsService.findOne(id);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to retrieve run');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createRunDto: CreateRunDto) {
-    return this.runsService.create(createRunDto);
+    try {
+      // Validate userId is a UUID
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(createRunDto.userId)) {
+        throw new BadRequestException('Invalid user ID format');
+      }
+      
+      return await this.runsService.create(createRunDto);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to create run');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Put(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateRunDto: UpdateRunDto,
   ) {
-    return this.runsService.update(id, updateRunDto);
+    try {
+      return await this.runsService.update(id, updateRunDto);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update run');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
-    await this.runsService.delete(id);
+  async delete(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    try {
+      await this.runsService.delete(id);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to delete run');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/start')
-  async startRun(@Param('id') id: string) {
-    return this.runsService.startRun(id);
+  async startRun(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+    try {
+      return await this.runsService.startRun(id);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to start run');
+    }
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/complete')
   async completeRun(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body('success') success: boolean = true,
   ) {
-    return this.runsService.completeRun(id, success);
+    try {
+      return await this.runsService.completeRun(id, success);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to complete run');
+    }
   }
 }
