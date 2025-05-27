@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Reading, CreateReadingDto, UpdateReadingDto } from '@shared/api-interfaces';
+import { Reading, CreateReadingDto, UpdateReadingDto } from '@./api-interfaces';
 import { validate as isUUID } from 'uuid';
 
 @Injectable()

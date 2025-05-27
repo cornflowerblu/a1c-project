@@ -53,10 +53,6 @@
       "options": {
         "targetName": "test"
       }
-    },
-    {
-      "plugin": "nx/js/dependencies-and-lockfile",
-      "options": {}
     }
   ],
   "generators": {

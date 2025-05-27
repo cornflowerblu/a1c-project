@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { ReadingsService } from './readings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateReadingDto, UpdateReadingDto } from '@shared/api-interfaces';
+import { CreateReadingDto, UpdateReadingDto } from '@./api-interfaces';
 
 @Controller('readings')
 export class ReadingsController {

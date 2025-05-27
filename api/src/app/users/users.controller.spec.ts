@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { User, UserRole } from '@shared/api-interfaces';
+import { User, UserRole } from '@./api-interfaces';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
 describe('UsersController', () => {

@@ -5,9 +5,9 @@ import { Webhook } from 'svix';
 export async function POST(req: Request) {
   // Get the headers
   const headerPayload = headers();
-  const svix_id = (await headerPayload).get('svix-id');
-  const svix_timestamp = (await headerPayload).get('svix-timestamp');
-  const svix_signature = (await headerPayload).get('svix-signature');
+  const svix_id = headerPayload.get('svix-id');
+  const svix_timestamp = headerPayload.get('svix-timestamp');
+  const svix_signature = headerPayload.get('svix-signature');
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name } = evt.data;
     
     // Here you would typically sync this user to your database
-    console.log('User created:', { id, email: email_addresses[0]?.email_address });
+    console.log(`User created: ${id}, ${email_addresses[0]?.email_address}, ${first_name} ${last_name}`);
     
     // You could make an API call to your backend to create the user
     try {
@@ -69,12 +69,17 @@ export async function POST(req: Request) {
       //     name: `${first_name || ''} ${last_name || ''}`.trim(),
       //   }),
       // });
+//   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     id,
+      //     email: email_addresses[0]?.email_address,
+      //     name: `${first_name || ''} ${last_name || ''}`.trim(),
+      //   }),
+      // });
     } catch (error) {
       console.error('Error syncing user to database:', error);
-      // Implement proper error handling
-      return new Response('Error processing webhook', {
-        status: 500,
-      });
+      // TODO: Implement retry logic or admin notification
     }
   }
   
@@ -83,7 +88,7 @@ export async function POST(req: Request) {
     const { id } = evt.data;
     
     // Here you would typically delete this user from your database
-    console.log('User deleted:', { id });
+    console.log(`User deleted: ${id}`);
     
     // You could make an API call to your backend to delete the user
     try {
@@ -93,10 +98,28 @@ export async function POST(req: Request) {
       // });
     } catch (error) {
       console.error('Error deleting user from database:', error);
-      // Implement proper error handling
-      return new Response('Error processing webhook', {
-        status: 500,
-      });
+      // TODO: Implement retry logic or admin notification
+    }
+  }
+      console.error('Error syncing user to database:', error);
+    }
+  }
+  
+  // Handle user deletion
+  if (eventType === 'user.deleted') {
+    const { id } = evt.data;
+    
+    // Here you would typically delete this user from your database
+    console.log(`User deleted: ${id}`);
+    
+    // You could make an API call to your backend to delete the user
+    try {
+      // Example API call (commented out)
+      // await fetch(`${process.env.API_URL}/users/${id}`, {
+      //   method: 'DELETE',
+      // });
+    } catch (error) {
+      console.error('Error deleting user from database:', error);
     }
   }
 

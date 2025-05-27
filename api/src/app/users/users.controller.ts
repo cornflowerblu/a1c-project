@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, NotFoundException, ConflictException, ParseUUIDPipe, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { User, UserRole } from '@shared/api-interfaces';
+import { User, UserRole } from '@./api-interfaces';
 
 // DTO interfaces
 interface CreateUserDto {

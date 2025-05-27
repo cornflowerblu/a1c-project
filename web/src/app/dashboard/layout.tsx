@@ -9,10 +9,6 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const sanitizedChildren = React.Children.map(children, child => {
-    return React.isValidElement(child) ? child : null;
-  });
-
   return (
     <ProtectedRoute>
       <div className="container mx-auto px-4 py-8">
@@ -21,7 +17,7 @@ export default function DashboardLayout({
             <DashboardSidebar />
           </div>
           <div className="md:col-span-3">
-            {sanitizedChildren}
+            {children}
           </div>
         </div>
       </div>

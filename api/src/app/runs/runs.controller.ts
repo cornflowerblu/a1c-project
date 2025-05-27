@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { RunsService } from './runs.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateRunDto, UpdateRunDto, RunStatus } from '@shared/api-interfaces';
+import { CreateRunDto, UpdateRunDto, RunStatus } from '@./api-interfaces';
 
 @Controller('runs')
 export class RunsController {
@@ -40,8 +40,8 @@ export class RunsController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createRunDto: CreateRunDto) {
     try {
-          // Validate userId using the isUUID function
-      if (!require('uuid').validate(createRunDto.userId)) {
+      // Validate userId is a UUID
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(createRunDto.userId)) {
         throw new BadRequestException('Invalid user ID format');
       }
       

@@ -13,10 +13,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const sanitizedChildren = React.Children.map(children, child => {
-    return React.isValidElement(child) ? child : null;
-  });
-
   return (
     <html lang="en">
       <body>
@@ -31,7 +27,7 @@ export default function RootLayout({
           <AuthProvider>
             <Navbar />
             <main className="min-h-screen bg-gray-50">
-              {sanitizedChildren}
+              {children}
             </main>
           </AuthProvider>
         </ClerkProvider>

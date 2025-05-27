@@ -65,7 +65,7 @@ async function main() {
       readings: true,
     },
   });
-  console.log('Created sample run with readings:', { id: run.id, userId: run.userId, readingCount: run.readings.length });
+  console.log('Created sample run with readings:', run);
 }
 
 main()

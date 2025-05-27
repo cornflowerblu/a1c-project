@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
-import { User, UserRole } from '@shared/api-interfaces';
+import { User, UserRole } from '@./api-interfaces';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 import { validate as isUUID } from 'uuid';
