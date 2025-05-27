@@ -12,9 +12,6 @@ const nextConfig = {
   nx: {},
   // Environment variables configuration
   env: {
-    // Node environment
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    
     // Port configuration
     PORT: process.env.NEXT_PORT || '4200',
     
