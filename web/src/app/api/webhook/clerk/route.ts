@@ -69,7 +69,38 @@ export async function POST(req: Request) {
       //     name: `${first_name || ''} ${last_name || ''}`.trim(),
       //   }),
       // });
+//   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     id,
+      //     email: email_addresses[0]?.email_address,
+      //     name: `${first_name || ''} ${last_name || ''}`.trim(),
+      //   }),
+      // });
     } catch (error) {
+      console.error('Error syncing user to database:', error);
+      // TODO: Implement retry logic or admin notification
+    }
+  }
+  
+  // Handle user deletion
+  if (eventType === 'user.deleted') {
+    const { id } = evt.data;
+    
+    // Here you would typically delete this user from your database
+    console.log(`User deleted: ${id}`);
+    
+    // You could make an API call to your backend to delete the user
+    try {
+      // Example API call (commented out)
+      // await fetch(`${process.env.API_URL}/users/${id}`, {
+      //   method: 'DELETE',
+      // });
+    } catch (error) {
+      console.error('Error deleting user from database:', error);
+      // TODO: Implement retry logic or admin notification
+    }
+  }
       console.error('Error syncing user to database:', error);
     }
   }

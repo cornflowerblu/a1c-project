@@ -1,7 +1,24 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '../context/auth-context';
+'use client';
+
+import React from 'react';
+import { useAuth as useCustomAuth } from '../context/auth-context';
+import { useRouter } from 'next/navigation';
+import { useAuth as useClerkAuth } from '@clerk/nextjs';
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isLoggedIn, isLoading } = useCustomAuth();
+  const { isLoaded: isClerkLoaded, isSignedIn } = useClerkAuth();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (isClerkLoaded && !isSignedIn) {
 import { useRouter } from 'next/navigation';
 import { useAuth as useClerkAuth } from '@clerk/nextjs';
 
