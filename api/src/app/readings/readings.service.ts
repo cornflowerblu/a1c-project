@@ -1,38 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-
-// Define Reading interface
-interface Reading {
-  id: string;
-  value: number;
-  timestamp: Date;
-  type: string;
-  unit?: string;
-  notes?: string;
-  runId?: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Define CreateReadingDto interface
-interface CreateReadingDto {
-  value: number;
-  type: string;
-  unit?: string;
-  notes?: string;
-  runId?: string;
-  userId: string;
-}
-
-// Define UpdateReadingDto interface
-interface UpdateReadingDto {
-  value?: number;
-  type?: string;
-  unit?: string;
-  notes?: string;
-  runId?: string;
-}
+import { Reading, CreateReadingDto, UpdateReadingDto } from '../../../../shared/api-interfaces/src';
 
 @Injectable()
 export class ReadingsService {
@@ -43,50 +11,93 @@ export class ReadingsService {
     const where: any = {};
     
     if (userId) {
-      where.userId = userId;
+      where.run = {
+        userId
+      };
     }
     
     if (runId) {
       where.runId = runId;
     }
     
-    return this.prisma.reading.findMany({
+    const readings = await this.prisma.reading.findMany({
       where,
       orderBy: {
         timestamp: 'desc',
       },
+      include: {
+        run: true
+      }
     });
+
+    // Map Prisma model to our interface
+    return readings.map(reading => ({
+      id: reading.id,
+      value: reading.glucoseValue,
+      timestamp: reading.timestamp,
+      type: reading.mealContext || 'default',
+      notes: reading.notes || '',
+      runId: reading.runId,
+      userId: reading.run?.userId || '',
+      createdAt: reading.createdAt,
+      updatedAt: reading.updatedAt
+    }));
   }
 
   async findOne(id: string): Promise<Reading> {
     const reading = await this.prisma.reading.findUnique({
       where: { id },
+      include: {
+        run: true
+      }
     });
     
     if (!reading) {
       throw new NotFoundException(`Reading with ID ${id} not found`);
     }
     
-    return reading;
+    // Map Prisma model to our interface
+    return {
+      id: reading.id,
+      value: reading.glucoseValue,
+      timestamp: reading.timestamp,
+      type: reading.mealContext || 'default',
+      notes: reading.notes || '',
+      runId: reading.runId,
+      userId: reading.run?.userId || '',
+      createdAt: reading.createdAt,
+      updatedAt: reading.updatedAt
+    };
   }
 
   async create(createReadingDto: CreateReadingDto): Promise<Reading> {
-    return this.prisma.reading.create({
+    const reading = await this.prisma.reading.create({
       data: {
-        value: createReadingDto.value,
-        type: createReadingDto.type,
-        unit: createReadingDto.unit,
+        glucoseValue: createReadingDto.value,
+        mealContext: createReadingDto.type,
+        timestamp: new Date(),
         notes: createReadingDto.notes,
-        user: {
-          connect: { id: createReadingDto.userId },
-        },
-        ...(createReadingDto.runId && {
-          run: {
-            connect: { id: createReadingDto.runId },
-          },
-        }),
+        run: {
+          connect: { id: createReadingDto.runId }
+        }
       },
+      include: {
+        run: true
+      }
     });
+
+    // Map Prisma model to our interface
+    return {
+      id: reading.id,
+      value: reading.glucoseValue,
+      timestamp: reading.timestamp,
+      type: reading.mealContext || 'default',
+      notes: reading.notes || '',
+      runId: reading.runId,
+      userId: reading.run?.userId || createReadingDto.userId,
+      createdAt: reading.createdAt,
+      updatedAt: reading.updatedAt
+    };
   }
 
   async update(id: string, updateReadingDto: UpdateReadingDto): Promise<Reading> {
@@ -94,12 +105,22 @@ export class ReadingsService {
     await this.findOne(id);
     
     // Prepare data for update
-    const data: any = { ...updateReadingDto };
+    const data: any = {};
     
-    // Remove runId from data and handle the relation separately
-    if ('runId' in updateReadingDto) {
-      delete data.runId;
-      
+    if (updateReadingDto.value !== undefined) {
+      data.glucoseValue = updateReadingDto.value;
+    }
+    
+    if (updateReadingDto.type !== undefined) {
+      data.mealContext = updateReadingDto.type;
+    }
+    
+    if (updateReadingDto.notes !== undefined) {
+      data.notes = updateReadingDto.notes;
+    }
+    
+    // Handle run relation
+    if (updateReadingDto.runId !== undefined) {
       if (updateReadingDto.runId) {
         data.run = { connect: { id: updateReadingDto.runId } };
       } else {
@@ -108,40 +129,55 @@ export class ReadingsService {
     }
     
     // Update the reading
-    return this.prisma.reading.update({
+    const reading = await this.prisma.reading.update({
       where: { id },
       data,
+      include: {
+        run: true
+      }
     });
+
+    // Map Prisma model to our interface
+    return {
+      id: reading.id,
+      value: reading.glucoseValue,
+      timestamp: reading.timestamp,
+      type: reading.mealContext || 'default',
+      notes: reading.notes || '',
+      runId: reading.runId,
+      userId: reading.run?.userId || '',
+      createdAt: reading.createdAt,
+      updatedAt: reading.updatedAt
+    };
   }
 
   async delete(id: string): Promise<Reading> {
     // Check if reading exists
-    await this.findOne(id);
+    const reading = await this.findOne(id);
     
     // Delete the reading
-    return this.prisma.reading.delete({
+    await this.prisma.reading.delete({
       where: { id },
     });
+
+    return reading;
   }
 
   async getStatistics(userId: string, type?: string): Promise<{ min: number; max: number; avg: number; count: number }> {
-    const where: any = { userId };
-    
-    if (type) {
-      where.type = type;
-    }
-    
-    const result = await this.prisma.$queryRaw`
+    // Build the query
+    const query = this.prisma.$executeRaw`
       SELECT 
-        MIN(value) as min,
-        MAX(value) as max,
-        AVG(value) as avg,
+        MIN("glucoseValue") as min,
+        MAX("glucoseValue") as max,
+        AVG("glucoseValue") as avg,
         COUNT(*) as count
       FROM "Reading"
-      WHERE "userId" = ${userId}
-      ${type ? this.prisma.$raw`AND "type" = ${type}` : this.prisma.$raw``}
+      JOIN "Run" ON "Reading"."runId" = "Run"."id"
+      WHERE "Run"."userId" = ${userId}
+      ${type ? this.prisma.$executeRaw`AND "Reading"."mealContext" = ${type}` : this.prisma.$executeRaw``}
     `;
     
+    const result = await query;
     return result[0];
   }
 }

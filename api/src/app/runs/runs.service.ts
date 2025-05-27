@@ -1,41 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-
-// Define Run interface
-enum RunStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-}
-
-interface Run {
-  id: string;
-  name: string;
-  description?: string;
-  status: RunStatus;
-  startedAt?: Date;
-  completedAt?: Date;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Define CreateRunDto interface
-interface CreateRunDto {
-  name: string;
-  description?: string;
-  userId: string;
-}
-
-// Define UpdateRunDto interface
-interface UpdateRunDto {
-  name?: string;
-  description?: string;
-  status?: RunStatus;
-  startedAt?: Date;
-  completedAt?: Date;
-}
+import { Run, RunStatus, CreateRunDto, UpdateRunDto } from '../../../../shared/api-interfaces/src';
 
 @Injectable()
 export class RunsService {
@@ -44,22 +9,28 @@ export class RunsService {
   async findAll(userId?: string): Promise<Run[]> {
     const where = userId ? { userId } : {};
     
-    return this.prisma.run.findMany({
+    const runs = await this.prisma.run.findMany({
       where,
       orderBy: {
         createdAt: 'desc',
       },
       include: {
-        readings: {
-          select: {
-            id: true,
-            value: true,
-            type: true,
-            timestamp: true,
-          },
-        },
+        readings: true,
       },
     });
+
+    // Map Prisma model to our interface
+    return runs.map(run => ({
+      id: run.id,
+      name: run.notes || 'Unnamed Run',
+      description: '',
+      status: RunStatus.PENDING,
+      userId: run.userId,
+      startedAt: run.startDate,
+      completedAt: run.endDate || undefined,
+      createdAt: run.createdAt,
+      updatedAt: run.updatedAt
+    }));
   }
 
   async findOne(id: string): Promise<Run> {
@@ -74,40 +45,94 @@ export class RunsService {
       throw new NotFoundException(`Run with ID ${id} not found`);
     }
     
-    return run;
+    // Map Prisma model to our interface
+    return {
+      id: run.id,
+      name: run.notes || 'Unnamed Run',
+      description: '',
+      status: RunStatus.PENDING,
+      userId: run.userId,
+      startedAt: run.startDate,
+      completedAt: run.endDate || undefined,
+      createdAt: run.createdAt,
+      updatedAt: run.updatedAt
+    };
   }
 
   async create(createRunDto: CreateRunDto): Promise<Run> {
-    return this.prisma.run.create({
+    const run = await this.prisma.run.create({
       data: {
-        name: createRunDto.name,
-        description: createRunDto.description,
+        notes: createRunDto.name || createRunDto.description,
+        startDate: new Date(),
         user: {
           connect: { id: createRunDto.userId },
         },
       },
     });
+
+    // Map Prisma model to our interface
+    return {
+      id: run.id,
+      name: run.notes || 'Unnamed Run',
+      description: createRunDto.description || '',
+      status: RunStatus.PENDING,
+      userId: run.userId,
+      startedAt: run.startDate,
+      completedAt: run.endDate || undefined,
+      createdAt: run.createdAt,
+      updatedAt: run.updatedAt
+    };
   }
 
   async update(id: string, updateRunDto: UpdateRunDto): Promise<Run> {
     // Check if run exists
     await this.findOne(id);
     
+    // Prepare data for update
+    const data: any = {};
+    
+    if (updateRunDto.name || updateRunDto.description) {
+      data.notes = updateRunDto.name || updateRunDto.description;
+    }
+    
+    if (updateRunDto.startedAt) {
+      data.startDate = updateRunDto.startedAt;
+    }
+    
+    if (updateRunDto.completedAt) {
+      data.endDate = updateRunDto.completedAt;
+    }
+    
     // Update the run
-    return this.prisma.run.update({
+    const run = await this.prisma.run.update({
       where: { id },
-      data: updateRunDto,
+      data,
     });
+
+    // Map Prisma model to our interface
+    return {
+      id: run.id,
+      name: run.notes || 'Unnamed Run',
+      description: '',
+      status: updateRunDto.status || RunStatus.PENDING,
+      userId: run.userId,
+      startedAt: run.startDate,
+      completedAt: run.endDate || undefined,
+      createdAt: run.createdAt,
+      updatedAt: run.updatedAt
+    };
   }
 
   async delete(id: string): Promise<Run> {
     // Check if run exists
-    await this.findOne(id);
+    const run = await this.findOne(id);
     
     // Delete the run
-    return this.prisma.run.delete({
+    await this.prisma.run.delete({
       where: { id },
     });
+
+    return run;
   }
 
   async startRun(id: string): Promise<Run> {
@@ -120,12 +145,9 @@ export class RunsService {
     }
     
     // Update the run status and startedAt timestamp
-    return this.prisma.run.update({
-      where: { id },
-      data: {
-        status: RunStatus.RUNNING,
-        startedAt: new Date(),
-      },
+    return this.update(id, {
+      status: RunStatus.RUNNING,
+      startedAt: new Date(),
     });
   }
 
@@ -139,12 +161,9 @@ export class RunsService {
     }
     
     // Update the run status and completedAt timestamp
-    return this.prisma.run.update({
-      where: { id },
-      data: {
-        status: success ? RunStatus.COMPLETED : RunStatus.FAILED,
-        completedAt: new Date(),
-      },
+    return this.update(id, {
+      status: success ? RunStatus.COMPLETED : RunStatus.FAILED,
+      completedAt: new Date(),
     });
   }
 }
