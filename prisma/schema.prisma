@@ -1,0 +1,46 @@
+// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  clerkId       String?   @unique
+  email         String    @unique
+  name          String?
+  role          String    @default("user") // Added to maintain compatibility with existing code
+  password      String?   // For local authentication
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  glucoseRuns   Run[]
+}
+
+model Run {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  startDate     DateTime
+  endDate       DateTime?
+  readings      Reading[]
+  estimatedA1C  Float?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Reading {
+  id            String    @id @default(uuid())
+  runId         String
+  run           Run       @relation(fields: [runId], references: [id])
+  glucoseValue  Float
+  timestamp     DateTime
+  mealContext   String?   // Before meal, After meal, Fasting, etc.
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
