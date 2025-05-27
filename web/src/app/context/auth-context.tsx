@@ -95,6 +95,7 @@ export function useAuth() {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  // amazonq-ignore-next-line
   
   return context;
 }

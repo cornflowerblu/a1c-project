@@ -1,5 +1,5 @@
-
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+
 const path = require('path');
 const fullPath = path.join(__dirname, '../dist/api')
 

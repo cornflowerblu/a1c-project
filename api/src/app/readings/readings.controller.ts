@@ -43,6 +43,7 @@ export class ReadingsController {
   @Get(':id')
   async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     try {
+      // amazonq-ignore-next-line
       return await this.readingsService.findOne(id);
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {

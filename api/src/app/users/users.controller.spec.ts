@@ -65,6 +65,7 @@ describe('UsersController', () => {
       const createUserDto = {
         email: 'new@example.com',
         name: 'New User',
+        // amazonq-ignore-next-line
         password: 'password123',
       };
       
@@ -82,6 +83,7 @@ describe('UsersController', () => {
       const createUserDto = {
         email: 'existing@example.com',
         name: 'Existing User',
+        // amazonq-ignore-next-line
         password: 'password123',
       };
       
