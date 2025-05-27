@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@./api-interfaces';
+import { User } from '@shared/api-interfaces';
 import { useAuth as useClerkAuth, useUser } from '@clerk/nextjs';
 
 interface AuthContextType {
@@ -23,7 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
 
-  const mapClerkUserToUser = (clerkUser: any, userId: string): User => ({
+  interface ClerkUser {
+    primaryEmailAddress?: { emailAddress: string };
+    firstName?: string;
+    lastName?: string;
+    publicMetadata?: { role?: string };
+    createdAt: string | Date;
+    updatedAt: string | Date;
+  }
+  
+  const mapClerkUserToUser = (clerkUser: ClerkUser, userId: string): User => ({
     id: userId,
     email: clerkUser.primaryEmailAddress?.emailAddress || '',
     name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
@@ -68,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       // Since we're using Clerk, this is just a placeholder
       // In a real implementation, you would integrate with Clerk's signIn method
-      console.log('Login attempted with:', credentials);
+      console.log('Login attempted with email:', credentials.email);
       setError('Direct login with email/password is not supported when using Clerk');
       setIsLoading(false);
     } catch (err) {
