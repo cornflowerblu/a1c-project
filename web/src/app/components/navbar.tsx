@@ -3,9 +3,19 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/auth-context';
+import { UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
+import { useAuth as useClerkAuth } from '@clerk/nextjs';
 
 export default function Navbar() {
-  const { isLoggedIn, user, logout } = useAuth();
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
+
+export default function Navbar() {
+  const { userId, user, isSignedIn } = useAuth();
 
   return (
     <nav className="bg-blue-600 text-white shadow-md">
@@ -15,23 +25,51 @@ export default function Navbar() {
         </Link>
         
         <div className="flex items-center space-x-4">
-          {isLoggedIn ? (
+          {isSignedIn ? (
+            <>
+              <span className="hidden md:inline">Welcome, {user?.fullName}</span>
+              <Link href="/dashboard" className="hover:text-blue-200">
+                Dashboard
+              </Link>
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+  const { isSignedIn } = useClerkAuth();
+
+  return (
+    <nav className="bg-blue-600 text-white shadow-md">
+      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+        <Link href="/" className="text-xl font-bold">
+          A1C Project
+        </Link>
+        
+        <div className="flex items-center space-x-4">
+          {isSignedIn ? (
             <>
               <span className="hidden md:inline">Welcome, {user?.name}</span>
               <Link href="/dashboard" className="hover:text-blue-200">
                 Dashboard
               </Link>
-              <button 
-                onClick={logout}
-                className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
-              >
-                Logout
-              </button>
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: 'w-8 h-8',
+                  }
+                }}
+              />
             </>
           ) : (
-            <Link href="/login" className="hover:text-blue-200">
-              Login
-            </Link>
+            <>
+              <SignInButton mode="modal">
+                <button className="hover:text-blue-200">Sign In</button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="bg-white text-blue-600 hover:bg-blue-100 px-3 py-1 rounded">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </>
           )}
         </div>
       </div>

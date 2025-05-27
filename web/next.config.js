@@ -12,7 +12,9 @@ const nextConfig = {
   nx: {},
   // Explicitly set the port from environment variable
   env: {
-    PORT: process.env.NEXT_PORT || '4200'
+    PORT: process.env.NEXT_PORT || '4200',
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY
   }
 };
 
