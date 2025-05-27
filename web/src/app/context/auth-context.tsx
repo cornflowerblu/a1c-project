@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '../../../../shared/api-interfaces/src';
+import { User } from '@./api-interfaces';
 import { useAuth as useClerkAuth, useUser } from '@clerk/nextjs';
 
 interface AuthContextType {

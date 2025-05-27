@@ -1,6 +1,6 @@
-import { User } from '../../../../shared/api-interfaces/src';
-import { environment } from '../../../../shared/src';
-import { getToken } from '../../../../shared/auth/src';
+import { User } from '@./api-interfaces';
+import { environment } from '@./shared';
+import { getToken } from '@./auth';
 
 const API_URL = environment.apiUrl;
 

@@ -126,17 +126,64 @@ For development and testing purposes, the API includes two default users:
 
 ## Environment Variables
 
-The application uses the following environment variables:
+The application uses a comprehensive environment configuration system:
+
+### Environment Files
+
+- `.env.example` - Template with documentation for all environment variables
+- `.env.development` - Development environment configuration
+- `.env.production` - Production environment configuration
+- `.env.local` - Local overrides (not committed to version control)
+
+### Configuration Variables
 
 ```
-# API Configuration
-PORT=3333
-JWT_SECRET=your-super-secret-key-change-in-production
+# Node environment: development, production, test
 NODE_ENV=development
 
-# Frontend Configuration
+# API configuration
+API_PORT=3333
+API_HOST=localhost
+API_PREFIX=api
+
+# Frontend configuration
 FRONTEND_URL=http://localhost:4200
-API_URL=http://localhost:3333/api
+
+# JWT configuration
+JWT_SECRET=your-secret-key-change-this-in-production
+JWT_EXPIRATION=1d
+
+# Database configuration (for future use)
+# DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# Clerk configuration (for authentication)
+# CLERK_SECRET_KEY=your-clerk-secret-key
+# CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
+# CLERK_WEBHOOK_SECRET=your-clerk-webhook-secret
+```
+
+### Environment Configuration Service
+
+The application includes a dedicated configuration service that:
+
+- Loads environment variables from appropriate .env files
+- Validates required variables are present and correctly formatted
+- Provides typed access to configuration values
+- Supports different environments (development, production, test)
+
+To access configuration values in the API:
+
+```typescript
+// Import the configuration service
+import { AppConfigService } from './config/config.service';
+
+// Inject the service
+constructor(private configService: AppConfigService) {}
+
+// Access configuration values
+const port = this.configService.port;
+const jwtSecret = this.configService.jwtSecret;
+const isProduction = this.configService.isProduction;
 ```
 
 ## Technologies Used
@@ -151,7 +198,7 @@ API_URL=http://localhost:3333/api
 
 ## Future Enhancements
 
-- Database integration (PostgreSQL, MongoDB)
+- Database integration (PostgreSQL)
 - User registration functionality
 - Role-based access control
 - Additional API endpoints

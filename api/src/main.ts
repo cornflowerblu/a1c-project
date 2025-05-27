@@ -6,24 +6,36 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { AppConfigService } from './app/config/config.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
+  
+  // Get configuration service
+  const configService = app.get(AppConfigService);
+  
+  // Set global prefix from configuration
+  const globalPrefix = configService.get('API_PREFIX');
   app.setGlobalPrefix(globalPrefix);
   
   // Enable CORS for the frontend
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+    origin: configService.frontendUrl,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
   
-  const port = process.env.API_PORT || 3333;
+  // Get port from configuration
+  const port = configService.port;
   await app.listen(port);
+  
   Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`
+    `🚀 Application is running on: http://${configService.host}:${port}/${globalPrefix}`
   );
+  
+  // Log environment information
+  Logger.log(`Environment: ${configService.get('NODE_ENV')}`);
+  Logger.log(`Frontend URL: ${configService.frontendUrl}`);
 }
 
 bootstrap();
