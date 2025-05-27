@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Reading, CreateReadingDto, UpdateReadingDto } from '../../../../shared/api-interfaces/src';
+import { Reading, CreateReadingDto, UpdateReadingDto } from '@./api-interfaces';
 
 @Injectable()
 export class ReadingsService {

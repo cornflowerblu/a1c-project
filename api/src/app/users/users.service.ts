@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { User, UserRole } from '../../../../shared/api-interfaces/src';
+import { User, UserRole } from '@./api-interfaces';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 

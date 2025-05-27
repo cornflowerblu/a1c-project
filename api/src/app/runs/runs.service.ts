@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Run, RunStatus, CreateRunDto, UpdateRunDto } from '../../../../shared/api-interfaces/src';
+import { Run, RunStatus, CreateRunDto, UpdateRunDto } from '@./api-interfaces';
 
 @Injectable()
 export class RunsService {

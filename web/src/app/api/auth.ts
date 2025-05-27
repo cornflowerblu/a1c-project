@@ -3,9 +3,9 @@ import {
   RegisterRequest, 
   AuthResponse, 
   User 
-} from '../../../../shared/api-interfaces/src';
-import { environment } from '../../../../shared/src';
-import { handleAuthResponse } from '../../../../shared/auth/src';
+} from '@./api-interfaces';
+import { environment } from '@./shared';
+import { handleAuthResponse } from '@./auth';
 
 const API_URL = environment.apiUrl;
 

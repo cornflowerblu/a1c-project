@@ -1,10 +1,11 @@
-import { User, AuthResponse } from '../../../api-interfaces/src';
+import { User, AuthResponse } from '@./api-interfaces';
 
 /**
  * Authentication utilities for both frontend and backend
  */
 
 // Token storage key
+// amazonq-ignore-next-line
 export const AUTH_TOKEN_KEY = 'auth_token';
 
 // Token utilities
