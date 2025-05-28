@@ -6,7 +6,7 @@
 export interface User {
   id: string;
   email: string;
-  name: string; // This maps to fullName in the schema
+  name?: string;
   role: UserRole;
   password?: string;
   clerkId?: string;
@@ -15,104 +15,66 @@ export interface User {
 }
 
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  CAREGIVER = 'CAREGIVER',
+  ADMIN = 'admin',
+  USER = 'user',
+  CAREGIVER = 'caregiver',
 }
 
 // Reading interfaces
 export interface Reading {
   id: string;
-  value: number;
+  glucoseValue: number;
   timestamp: Date;
-  type: string;
-  unit?: string;
+  mealContext?: string;
   notes?: string;
-  runId?: string;
+  glucoseRunId: string;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface CreateReadingDto {
-  value: number;
-  type: string;
-  unit?: string;
+  glucoseValue: number;
+  timestamp: Date;
+  mealContext?: string;
   notes?: string;
-  runId?: string;
+  glucoseRunId: string;
   userId: string;
 }
 
 export interface UpdateReadingDto {
-  value?: number;
-  type?: string;
-  unit?: string;
+  glucoseValue?: number;
+  timestamp?: Date;
+  mealContext?: string;
   notes?: string;
-  runId?: string;
+  glucoseRunId?: string;
 }
 
 // Run interfaces
-export enum RunStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-}
-
 export interface Run {
   id: string;
-  name: string;
-  description?: string;
-  status: RunStatus;
-  startedAt?: Date;
-  completedAt?: Date;
+  startDate: Date;
+  endDate?: Date;
+  estimatedA1C?: number;
+  notes?: string;
   userId: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface CreateRunDto {
-  name: string;
-  description?: string;
+  startDate: Date;
+  endDate?: Date;
+  estimatedA1C?: number;
+  notes?: string;
   userId: string;
 }
 
 export interface UpdateRunDto {
-  name?: string;
-  description?: string;
-  status?: RunStatus;
-  startedAt?: Date;
-  completedAt?: Date;
-}
-
-// Authentication interfaces
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  email: string;
-  password: string;
-  name: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-// API response interfaces
-export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  message?: string;
-  statusCode: number;
-}
-
-// Example data interfaces
-export interface Message {
-  message: string;
+  startDate?: Date;
+  endDate?: Date;
+  estimatedA1C?: number;
+  notes?: string;
 }
 
 // Authentication interfaces
