@@ -65,8 +65,6 @@ describe('UsersController', () => {
       const createUserDto = {
         email: 'new@example.com',
         name: 'New User',
-        // amazonq-ignore-next-line
-        password: 'password123',
       };
       
       const result = await controller.create(createUserDto);
@@ -74,7 +72,6 @@ describe('UsersController', () => {
       expect(service.create).toHaveBeenCalledWith(
         createUserDto.email,
         createUserDto.name,
-        createUserDto.password,
         undefined
       );
     });

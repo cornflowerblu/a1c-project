@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RunsController } from './runs.controller';
 import { RunsService } from './runs.service';
 import { NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 
 describe('RunsController', () => {
   let controller: RunsController;
@@ -77,7 +78,7 @@ describe('RunsController', () => {
       const createRunDto = {
         startDate: new Date(),
         notes: 'New Run Notes',
-        userId: 'user1',
+        userId: randomUUID(),
       };
       
       const result = await controller.create(createRunDto);

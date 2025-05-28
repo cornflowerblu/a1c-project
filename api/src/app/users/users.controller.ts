@@ -7,14 +7,12 @@ import { User, UserRole } from '@./api-interfaces';
 interface CreateUserDto {
   email: string;
   name: string;
-  password: string;
   role?: UserRole;
 }
 
 interface UpdateUserDto {
   email?: string;
   name?: string;
-  password?: string;
   role?: UserRole;
 }
 
@@ -58,11 +56,7 @@ export class UsersController {
       if (!emailRegex.test(createUserDto.email)) {
         throw new BadRequestException('Invalid email format');
       }
-      
-      // Validate password strength
-      if (!createUserDto.password || createUserDto.password.length < 8) {
-        throw new BadRequestException('Password must be at least 8 characters long');
-      }
+    
       
       return await this.usersService.create(
         createUserDto.email,
@@ -91,11 +85,7 @@ export class UsersController {
           throw new BadRequestException('Invalid email format');
         }
       }
-      
-      // Validate password strength if provided
-      if (updateUserDto.password && updateUserDto.password.length < 8) {
-        throw new BadRequestException('Password must be at least 8 characters long');
-      }
+    
       
       return await this.usersService.update(id, updateUserDto);
     } catch (error) {
