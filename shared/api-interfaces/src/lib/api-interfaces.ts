@@ -6,7 +6,7 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  name: string; // This maps to fullName in the schema
   role: UserRole;
   password?: string;
   clerkId?: string;
@@ -15,8 +15,9 @@ export interface User {
 }
 
 export enum UserRole {
-  ADMIN = 'admin',
-  USER = 'user',
+  ADMIN = 'ADMIN',
+  USER = 'USER',
+  CAREGIVER = 'CAREGIVER',
 }
 
 // Reading interfaces
