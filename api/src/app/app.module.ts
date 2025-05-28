@@ -19,5 +19,6 @@ import { RunsModule } from './runs/runs.module';
   ],
   controllers: [AppController],
   providers: [AppService],
+  exports: [AppConfigModule],
 })
 export class AppModule {}

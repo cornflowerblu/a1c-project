@@ -4,16 +4,16 @@
  */
 export const environment = {
   // Production flag
-  production: process.env.NODE_ENV === 'production',
+  production: process.env["NODE_ENV"] === 'production',
   
   // API URL
-  apiUrl: process.env.API_URL || 'http://localhost:3333/api',
+  apiUrl: process.env["API_URL"] || 'http://localhost:3333/api',
   
   // API version
   apiVersion: 'v1',
   
   // Frontend URL
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:4200',
+  frontendUrl: process.env["FRONTEND_URL"] || 'http://localhost:4200',
 };
 
 /**
@@ -21,7 +21,7 @@ export const environment = {
  * @returns The current environment name
  */
 export function getEnvironment(): string {
-  return process.env.NODE_ENV || 'development';
+  return process.env["NODE_ENV"] || 'development';
 }
 
 /**

@@ -35,6 +35,35 @@ a1c-project/
 - **Environment Configuration**: Centralized environment management
 - **Component Library**: Reusable React components
 
+## Security Measures
+
+This project implements several security best practices to protect against common vulnerabilities:
+
+### Input Validation & Sanitization
+- All user inputs are validated for format and content
+- UUID validation for all ID parameters
+- Email format validation
+- Input sanitization to prevent XSS attacks
+
+### Database Security
+- Parameterized queries using Prisma's safe query methods
+- No raw SQL queries to prevent SQL injection
+- Proper error handling to prevent information leakage
+
+### Authentication & Data Protection
+- Password hashing using bcrypt
+- Passwords excluded from API responses
+- JWT-based authentication with protected routes
+
+### Output Encoding
+- HTML entity encoding for all user-generated content
+- Prevention of cross-site scripting (XSS) attacks
+
+### Error Handling
+- Standardized error responses
+- Prevention of sensitive information leakage
+- Proper exception handling
+
 ## Getting Started
 
 ### Prerequisites

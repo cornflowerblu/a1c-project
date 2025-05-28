@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppConfigService } from './config.service';
 import { validationSchema } from './validation.schema';
@@ -6,7 +6,9 @@ import { validationSchema } from './validation.schema';
 /**
  * Configuration module
  * This module loads environment variables from .env files and validates them
+ * @Global decorator makes this module's providers available globally
  */
+@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({

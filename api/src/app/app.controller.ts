@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -7,6 +7,10 @@ export class AppController {
 
   @Get()
   getData() {
-    return this.appService.getData();
+    try {
+      return this.appService.getData();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to get application data');
+    }
   }
 }

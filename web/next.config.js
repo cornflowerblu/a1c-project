@@ -1,7 +1,7 @@
-//@ts-check
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { composePlugins, withNx } = require('@nx/next');
+
+//@ts-check
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
@@ -12,9 +12,6 @@ const nextConfig = {
   nx: {},
   // Environment variables configuration
   env: {
-    // Node environment
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    
     // Port configuration
     PORT: process.env.NEXT_PORT || '4200',
     

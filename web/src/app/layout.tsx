@@ -17,6 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ClerkProvider
+          publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
           appearance={{
             elements: {
               formButtonPrimary: 'bg-blue-500 hover:bg-blue-600 text-white',

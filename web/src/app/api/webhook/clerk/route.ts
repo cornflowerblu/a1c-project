@@ -5,9 +5,9 @@ import { Webhook } from 'svix';
 export async function POST(req: Request) {
   // Get the headers
   const headerPayload = headers();
-  const svix_id = headerPayload.get('svix-id');
-  const svix_timestamp = headerPayload.get('svix-timestamp');
-  const svix_signature = headerPayload.get('svix-signature');
+  const svix_id = (await headerPayload).get('svix-id');
+  const svix_timestamp = (await headerPayload).get('svix-timestamp');
+  const svix_signature = (await headerPayload).get('svix-signature');
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
@@ -81,14 +81,15 @@ export async function POST(req: Request) {
       console.error('Error syncing user to database:', error);
       // TODO: Implement retry logic or admin notification
     }
+    return new Response('Webhook received', { status: 200 });
   }
   
-  // Handle user deletion
-  if (eventType === 'user.deleted') {
+  // Handle user Update
+  if (eventType === 'user.updated') {
     const { id } = evt.data;
     
     // Here you would typically delete this user from your database
-    console.log(`User deleted: ${id}`);
+    console.log(`User updated: ${id}`);
     
     // You could make an API call to your backend to delete the user
     try {
@@ -97,13 +98,12 @@ export async function POST(req: Request) {
       //   method: 'DELETE',
       // });
     } catch (error) {
-      console.error('Error deleting user from database:', error);
+      console.error('Error updating user in database:', error);
       // TODO: Implement retry logic or admin notification
     }
+    return new Response('Webhook received', { status: 200 });
   }
-      console.error('Error syncing user to database:', error);
-    }
-  }
+
   
   // Handle user deletion
   if (eventType === 'user.deleted') {
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error('Error deleting user from database:', error);
     }
+    return new Response('Webhook received', { status: 200 });
   }
-
-  return new Response('Webhook received', { status: 200 });
 }
+

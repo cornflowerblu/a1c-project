@@ -2,20 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
 import { useAuth } from '../context/auth-context';
-import { UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
-import { useAuth as useClerkAuth } from '@clerk/nextjs';
 
 export default function Navbar() {
-'use client';
-
-import React from 'react';
-import Link from 'next/link';
-import { UserButton, SignInButton, SignUpButton } from '@clerk/nextjs';
-import { useAuth } from '@clerk/nextjs';
-
-export default function Navbar() {
-  const { userId, user, isSignedIn } = useAuth();
+  const { user, isLoggedIn } = useAuth();
 
   return (
     <nav className="bg-blue-600 text-white shadow-md">
@@ -25,26 +16,7 @@ export default function Navbar() {
         </Link>
         
         <div className="flex items-center space-x-4">
-          {isSignedIn ? (
-            <>
-              <span className="hidden md:inline">Welcome, {user?.fullName}</span>
-              <Link href="/dashboard" className="hover:text-blue-200">
-                Dashboard
-              </Link>
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-  const { isSignedIn } = useClerkAuth();
-
-  return (
-    <nav className="bg-blue-600 text-white shadow-md">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold">
-          A1C Project
-        </Link>
-        
-        <div className="flex items-center space-x-4">
-          {isSignedIn ? (
+          {isLoggedIn ? (
             <>
               <span className="hidden md:inline">Welcome, {user?.name}</span>
               <Link href="/dashboard" className="hover:text-blue-200">

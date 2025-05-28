@@ -9,6 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   isLoggedIn: boolean;
   logout: () => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
   error: string | null;
 }
 
@@ -20,11 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   
   const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
-  const { user: clerkUser } = useUser();
-
-  useEffect(() => {
-    // Check if user is already logged in with Clerk
-const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
 
   const mapClerkUserToUser = (clerkUser: any, userId: string): User => ({
@@ -45,63 +41,9 @@ const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
           } else {
             setUser(null);
           }
-      try {
-        if (isClerkLoaded) {
-          if (userId && clerkUser) {
-            // Map Clerk user to our User type
-            setUser({
-              id: userId,
-              email: clerkUser.primaryEmailAddress?.emailAddress || '',
-              name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-              role: clerkUser.publicMetadata?.role as any || 'user',
-              createdAt: new Date(clerkUser.createdAt),
-              updatedAt: new Date(clerkUser.updatedAt),
-            });
-          } else {
-            setUser(null);
-          }
-          setIsLoading(false);
-        }
-} else {
-            setUser(null);
-          }
           setIsLoading(false);
         }
       } catch (err) {
-        setUser(null);
-        if (err instanceof Error) {
-          setError(err.message);
-        } else if (typeof err === 'string') {
-          setError(err);
-        } else {
-          setError('An unknown authentication error occurred');
-        }
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [isClerkLoaded, userId, clerkUser]);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      setUser(null);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else if (typeof err === 'string') {
-        setError(err);
-      } else {
-        setError('An unknown error occurred during logout');
-      }
-    }
-  };
-
-  const value = {
-    user,
-    isLoading: isLoading || !isClerkLoaded,
-    isLoggedIn: !!user,
         setUser(null);
         setError(err instanceof Error ? err.message : 'Authentication error');
         setIsLoading(false);
@@ -120,10 +62,26 @@ const { isLoaded: isClerkLoaded, userId, signOut } = useClerkAuth();
     }
   };
 
+  const handleLogin = async (credentials: { email: string; password: string }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // Since we're using Clerk, this is just a placeholder
+      // In a real implementation, you would integrate with Clerk's signIn method
+      console.log('Login attempted with:', credentials);
+      setError('Direct login with email/password is not supported when using Clerk');
+      setIsLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isLoading: isLoading || !isClerkLoaded,
     isLoggedIn: !!user,
+    login: handleLogin,
     logout: handleLogout,
     error,
   };
@@ -137,6 +95,7 @@ export function useAuth() {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  // amazonq-ignore-next-line
   
   return context;
 }
