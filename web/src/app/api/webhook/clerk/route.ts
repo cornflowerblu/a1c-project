@@ -81,6 +81,7 @@ export async function POST(req: Request) {
       console.error('Error syncing user to database:', error);
       // TODO: Implement retry logic or admin notification
     }
+    return new Response('Webhook received', { status: 200 });
   }
   
   // Handle user Update
@@ -100,6 +101,7 @@ export async function POST(req: Request) {
       console.error('Error updating user in database:', error);
       // TODO: Implement retry logic or admin notification
     }
+    return new Response('Webhook received', { status: 200 });
   }
 
   
