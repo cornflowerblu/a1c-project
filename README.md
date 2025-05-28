@@ -9,6 +9,10 @@ a1c-project/
 ├── api/                  # NestJS API backend
 │   ├── src/
 │   │   ├── app/
+│   │   │   ├── config/    # Configuration module
+│   │   │   ├── database/  # Database module
+│   │   │   ├── queue/     # Queue management
+│   │   │   ├── webhook/   # Webhook handlers
 │   │   │   ├── auth/     # Authentication module
 │   │   │   └── users/    # Users module
 │   │   └── main.ts       # API entry point
@@ -185,6 +189,14 @@ JWT_EXPIRATION=1d
 # Database configuration (for future use)
 # DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 
+# Redis configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redispassword
+
+# Queue configuration
+QUEUE_NAME=a1c-queue
+
 # Clerk configuration (for authentication)
 # CLERK_SECRET_KEY=your-clerk-secret-key
 # CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
@@ -224,6 +236,8 @@ const isProduction = this.configService.isProduction;
 - [JWT](https://jwt.io/) - JSON Web Tokens for secure authentication
 - [React](https://reactjs.org/) - JavaScript library for building user interfaces
 - [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
+- [PostgreSQL](https://www.postgresql.org/) - Open source relational database
+- [Redis](https://redis.io/) - In-memory data store for queue management
 
 ## Future Enhancements
 
