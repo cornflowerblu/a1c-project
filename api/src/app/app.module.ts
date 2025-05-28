@@ -12,6 +12,7 @@ import { RunsModule } from './runs/runs.module';
 import { QueueModule } from './queue/queue.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { FailedJobsModule } from './failed-jobs/failed-jobs.module';
+import { ClerkModule } from './clerk/clerk.module';
 
 @Module({
   imports: [
@@ -23,9 +24,10 @@ import { FailedJobsModule } from './failed-jobs/failed-jobs.module';
     // WebsocketModule,
     QueueModule,
     WebhookModule,
-    FailedJobsModule
+    FailedJobsModule,
+    ClerkModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService],
+  providers: [AppService, PrismaService, ClerkService],
 })
 export class AppModule {}

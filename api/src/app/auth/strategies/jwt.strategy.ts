@@ -5,10 +5,11 @@ import { UsersService } from '../../users/users.service';
 import { AppConfigService } from '../../config/config.service';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class ClerkJwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private usersService: UsersService,
-    private configService: AppConfigService
+    private configService: AppConfigService,
+    private clerkService: ClerkService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -17,8 +18,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
-    const user = await this.usersService.findOne(payload.sub);
-    return user;
+  async validate(token: string) {
+    const session = await this.clerkService.verifyToken(token);
+    if (!session) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+    return session;
+  }
+
+  async validate(request: any, payload: any) {
+    // Extract the token from the request
+    const authHeader = request.headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing Authorization header');
+    }
   }
 }
