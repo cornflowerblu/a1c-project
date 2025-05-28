@@ -60,6 +60,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@angular-devkit/core": "^19.2.13",
+    "@clerk/backend": "^1.33.1",
     "@clerk/clerk-sdk-node": "^4.13.11",
     "@clerk/nextjs": "^4.29.9",
     "@clerk/types": "^3.62.0",

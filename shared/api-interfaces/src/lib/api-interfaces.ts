@@ -106,3 +106,12 @@ export interface ApiResponse<T> {
 export interface Message {
   message: string;
 }
+
+export interface Caregiver {
+  id: string;
+  patientId: string;  
+  name: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

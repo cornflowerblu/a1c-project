@@ -9,11 +9,12 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
   ) {}
+  
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateSession(sessionId: string): Promise<User | null> {
     // This method is kept for backward compatibility
     // In a real implementation with Clerk, we would validate differently
-    return this.usersService.validateUser(email, password);
+    return this.usersService.findOne(sessionId);
   }
 
   async login(user: User): Promise<AuthResponse> {
