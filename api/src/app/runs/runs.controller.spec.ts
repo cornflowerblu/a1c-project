@@ -3,26 +3,20 @@ import { RunsController } from './runs.controller';
 import { RunsService } from './runs.service';
 import { NotFoundException } from '@nestjs/common';
 
-enum RunStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-}
-
 describe('RunsController', () => {
   let controller: RunsController;
   let service: RunsService;
 
   const mockRun = {
     id: '1',
-    name: 'Test Run',
-    description: 'Test Description',
-    status: RunStatus.PENDING,
+    startDate: new Date(),
+    endDate: null,
+    estimatedA1C: 5.7,
+    notes: 'Test Notes',
     userId: 'user1',
     createdAt: new Date(),
     updatedAt: new Date(),
-    readings: [],
+    glucoseReadings: [],
   };
 
   const mockRunsService = {
@@ -31,16 +25,9 @@ describe('RunsController', () => {
     create: jest.fn().mockResolvedValue(mockRun),
     update: jest.fn().mockResolvedValue(mockRun),
     delete: jest.fn().mockResolvedValue(undefined),
-    startRun: jest.fn().mockResolvedValue({
-      ...mockRun,
-      status: RunStatus.RUNNING,
-      startedAt: expect.any(Date),
-    }),
     completeRun: jest.fn().mockResolvedValue({
       ...mockRun,
-      status: RunStatus.COMPLETED,
-      startedAt: expect.any(Date),
-      completedAt: expect.any(Date),
+      endDate: expect.any(Date),
     }),
   };
 
@@ -88,8 +75,8 @@ describe('RunsController', () => {
   describe('create', () => {
     it('should create a new run', async () => {
       const createRunDto = {
-        name: 'New Run',
-        description: 'New Description',
+        startDate: new Date(),
+        notes: 'New Run Notes',
         userId: 'user1',
       };
       
@@ -102,7 +89,7 @@ describe('RunsController', () => {
   describe('update', () => {
     it('should update a run', async () => {
       const updateRunDto = {
-        name: 'Updated Run',
+        notes: 'Updated Notes',
       };
       
       const result = await controller.update('1', updateRunDto);
@@ -118,46 +105,14 @@ describe('RunsController', () => {
     });
   });
 
-  describe('startRun', () => {
-    it('should start a run', async () => {
-      const result = await controller.startRun('1');
-      expect(result).toEqual({
-        ...mockRun,
-        status: RunStatus.RUNNING,
-        startedAt: expect.any(Date),
-      });
-      expect(service.startRun).toHaveBeenCalledWith('1');
-    });
-  });
-
   describe('completeRun', () => {
-    it('should complete a run successfully', async () => {
-      const result = await controller.completeRun('1', true);
+    it('should complete a run', async () => {
+      const result = await controller.completeRun('1');
       expect(result).toEqual({
         ...mockRun,
-        status: RunStatus.COMPLETED,
-        startedAt: expect.any(Date),
-        completedAt: expect.any(Date),
+        endDate: expect.any(Date),
       });
-      expect(service.completeRun).toHaveBeenCalledWith('1', true);
-    });
-
-    it('should mark a run as failed', async () => {
-      jest.spyOn(service, 'completeRun').mockResolvedValueOnce({
-        ...mockRun,
-        status: RunStatus.FAILED,
-        startedAt: expect.any(Date),
-        completedAt: expect.any(Date),
-      });
-      
-      const result = await controller.completeRun('1', false);
-      expect(result).toEqual({
-        ...mockRun,
-        status: RunStatus.FAILED,
-        startedAt: expect.any(Date),
-        completedAt: expect.any(Date),
-      });
-      expect(service.completeRun).toHaveBeenCalledWith('1', false);
+      expect(service.completeRun).toHaveBeenCalledWith('1');
     });
   });
 });

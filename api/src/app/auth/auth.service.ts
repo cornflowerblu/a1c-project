@@ -11,6 +11,8 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
+    // This method is kept for backward compatibility
+    // In a real implementation with Clerk, we would validate differently
     return this.usersService.validateUser(email, password);
   }
 
