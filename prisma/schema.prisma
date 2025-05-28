@@ -16,14 +16,42 @@ model User {
   role          UserRole @default(user)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  glucoseRuns   Run[]
-  glucoseReadings Reading[]
+ 
+ // Data relationships
+  glucoseRuns       Run[]
+  glucoseReadings   Reading[]
+  
+  // Caregiver relationships
+  caregivers        CaregiverAccess[] @relation("PatientCaregivers")
+  caregivingFor     CaregiverAccess[] @relation("CaregiverPatients")
 }
 
 enum UserRole {
   admin
   user
   caregiver
+}
+
+model CaregiverAccess {
+  id              String    @id @default(uuid())
+  patientId       String
+  caregiverId     String
+  status          AccessStatus @default(pending)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  patient         User      @relation("PatientCaregivers", fields: [patientId], references: [id])
+  caregiver       User      @relation("CaregiverPatients", fields: [caregiverId], references: [id])
+  
+  // Unique constraint to prevent duplicate relationships
+  @@unique([patientId, caregiverId])
+}
+
+enum AccessStatus {
+  pending
+  active
+  revoked
 }
 
 model Run {

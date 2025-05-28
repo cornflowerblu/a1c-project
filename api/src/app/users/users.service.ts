@@ -73,28 +73,6 @@ export class UsersService {
     }
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
-    // This method is kept for backward compatibility with auth service
-    // but since we're using Clerk for authentication, we don't need to validate passwords
-    try {
-      const user = await this.findByEmail(email);
-      
-      if (!user) {
-        return null;
-      }
-      
-      // With Clerk, we would validate the user differently
-      // For now, just return the user
-      return user;
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      // Handle other errors without exposing details
-      return null;
-    }
-  }
-
   async findAll(): Promise<User[]> {
     try {
       const users = await this.prisma.user.findMany();
@@ -272,5 +250,83 @@ export class UsersService {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+// Caregiver management
+  async requestCaregiverAccess(patientEmail: string, caregiverId: string) {
+    const patient = await this.prisma.user.findUnique({
+      where: { email: patientEmail },
+    });
+    
+    if (!patient) {
+      throw new NotFoundException('Patient not found');
+    }
+    
+    return this.prisma.caregiverAccess.create({
+      data: {
+        patientId: patient.id,
+        caregiverId,
+        status: 'pending',
+      },
+    });
+  }
+  
+  async approveCaregiverRequest(requestId: string, patientId: string) {
+    const request = await this.prisma.caregiverAccess.findUnique({
+      where: { id: requestId },
+    });
+    
+    if (!request || request.patientId !== patientId) {
+      throw new NotFoundException('Request not found');
+    }
+    
+    return this.prisma.caregiverAccess.update({
+      where: { id: requestId },
+      data: { status: 'active' },
+    });
+  }
+  
+  async revokeCaregiverAccess(requestId: string, patientId: string) {
+    const request = await this.prisma.caregiverAccess.findUnique({
+      where: { id: requestId },
+    });
+    
+    if (!request || request.patientId !== patientId) {
+      throw new NotFoundException('Request not found');
+    }
+    
+    return this.prisma.caregiverAccess.update({
+      where: { id: requestId },
+      data: { status: 'revoked' },
+    });
+  }
+  
+  // Get patients for a caregiver
+  async getCaregivingPatients(caregiverId: string) {
+    const relationships = await this.prisma.caregiverAccess.findMany({
+      where: {
+        caregiverId,
+        status: 'active',
+      },
+      include: {
+        patient: true,
+      },
+    });
+    
+    return relationships.map(rel => rel.patient);
+  }
+  
+  // Get caregivers for a patient
+  async getPatientCaregivers(patientId: string) {
+    const relationships = await this.prisma.caregiverAccess.findMany({
+      where: {
+        patientId,
+        status: 'active',
+      },
+      include: {
+        caregiver: true,
+      },
+    });
+    
+    return relationships.map(rel => rel.caregiver);
   }
 }
