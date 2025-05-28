@@ -13,9 +13,9 @@ export default function HomePage() {
   useEffect(() => {
     if (!isLoading) {
       if (isLoggedIn) {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       } else {
-        router.push('/');
+        router.replace('/');
       }
     }
   }, [isLoggedIn, isLoading, router]);
