@@ -106,35 +106,37 @@ a1c-project/
 ## Authentication Implementation (Clerk with Magic Links and Passkeys)
 
 1. **Setup Clerk Authentication**
-   - Implement passwordless authentication with magic links
-   - Configure passkey (WebAuthn) authentication
-   - Set up Clerk webhooks for user events
-   - Create authentication guards for protected routes in NestJS
+   [-] Implement passwordless authentication with magic links
+   [-] Configure passkey (WebAuthn) authentication
+   [-] Set up Clerk webhooks for user events
+   [-] Create authentication guards for protected routes in NestJS
 
 2. **Integration with Next.js Frontend**
-   - Use Clerk's React components and hooks
-   - Implement sign-in and sign-up flows with magic links
-   - Add passkey registration and authentication
-   - Implement protected routes using Clerk's authentication state
+   [-] Use Clerk's React components and hooks
+   [-] Implement sign-in and sign-up flows with magic links
+   [-] Add passkey registration and authentication
+   [-] Implement protected routes using Clerk's authentication state
 
 3. **Authentication Components**
-   - Use Clerk's pre-built authentication components
+   [-] Use Clerk's pre-built authentication components
    - Customize the authentication UI to match application design
    - Implement seamless authentication flows
-   - Add multi-factor authentication options
+   [-] Add multi-factor authentication options
 
 ## Core Features Implementation
 
 ### User Management
 1. **User Registration and Login**
-   - Implement passwordless registration with magic links
-   - Add passkey (WebAuthn) authentication support
-   - Create seamless login experience with no passwords
+   [-] Implement passwordless registration with magic links
+   [-] Add passkey (WebAuthn) authentication support
+   [-] Create seamless login experience with no passwords
    - Implement account recovery options
 
 2. **User Profile**
-   - Allow users to view and edit their profile information
-   - Store diabetes-related information
+   [-] Allow users to view and edit their profile information
+   [-] Store diabetes-related information
+  - Set up row-level permissions so that a user can only see their own data, except for the caregiver role, who can see another user's data read-only
+  - Create the ability to assign a caregiver to your account 
 
 ### A1C Estimation Features
 1. **Glucose Reading Entry**

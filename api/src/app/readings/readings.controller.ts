@@ -11,10 +11,10 @@ export class ReadingsController {
   @Get()
   async findAll(
     @Query('userId', new ParseUUIDPipe({ version: '4', optional: true })) userId?: string,
-    @Query('runId', new ParseUUIDPipe({ version: '4', optional: true })) runId?: string,
+    @Query('glucoseRunId', new ParseUUIDPipe({ version: '4', optional: true })) glucoseRunId?: string,
   ) {
     try {
-      return await this.readingsService.findAll(userId, runId);
+      return await this.readingsService.findAll(userId, glucoseRunId);
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -27,10 +27,10 @@ export class ReadingsController {
   @Get('statistics')
   async getStatistics(
     @Query('userId', new ParseUUIDPipe({ version: '4' })) userId: string,
-    @Query('type') type?: string,
+    @Query('mealContext') mealContext?: string,
   ) {
     try {
-      return await this.readingsService.getStatistics(userId, type);
+      return await this.readingsService.getStatistics(userId, mealContext);
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;

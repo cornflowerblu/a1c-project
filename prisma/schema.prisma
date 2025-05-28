@@ -13,11 +13,17 @@ model User {
   clerkId       String?   @unique
   email         String    @unique
   name          String?
-  role          String    @default("user") // Added to maintain compatibility with existing code
-  password      String?   // For local authentication
+  role          UserRole @default(user)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   glucoseRuns   Run[]
+  glucoseReadings Reading[]
+}
+
+enum UserRole {
+  admin
+  user
+  caregiver
 }
 
 model Run {
@@ -26,7 +32,7 @@ model Run {
   user          User      @relation(fields: [userId], references: [id])
   startDate     DateTime
   endDate       DateTime?
-  readings      Reading[]
+  glucoseReadings      Reading[]
   estimatedA1C  Float?
   notes         String?
   createdAt     DateTime  @default(now())
@@ -35,8 +41,10 @@ model Run {
 
 model Reading {
   id            String    @id @default(uuid())
-  runId         String
-  run           Run       @relation(fields: [runId], references: [id])
+  glucoseRunId         String
+  glucoseRun           Run       @relation(fields: [glucoseRunId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
   glucoseValue  Float
   timestamp     DateTime
   mealContext   String?   // Before meal, After meal, Fasting, etc.

@@ -1,11 +1,16 @@
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER', 'CAREGIVER');
+
+-- CreateEnum
+CREATE TYPE "RunStatus" AS ENUM ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "clerkId" TEXT,
     "email" TEXT NOT NULL,
     "name" TEXT,
-    "role" TEXT NOT NULL DEFAULT 'user',
-    "password" TEXT,
+    "role" "UserRole" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -15,13 +20,14 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Run" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "startDate" TIMESTAMP(3) NOT NULL,
-    "endDate" TIMESTAMP(3),
-    "estimatedA1C" DOUBLE PRECISION,
-    "notes" TEXT,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "status" "RunStatus" NOT NULL DEFAULT 'PENDING',
+    "startedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "Run_pkey" PRIMARY KEY ("id")
 );
@@ -29,13 +35,15 @@ CREATE TABLE "Run" (
 -- CreateTable
 CREATE TABLE "Reading" (
     "id" TEXT NOT NULL,
-    "runId" TEXT NOT NULL,
-    "glucoseValue" DOUBLE PRECISION NOT NULL,
-    "timestamp" TIMESTAMP(3) NOT NULL,
-    "mealContext" TEXT,
+    "value" DOUBLE PRECISION NOT NULL,
+    "timestamp" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "type" TEXT NOT NULL,
+    "unit" TEXT,
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "runId" TEXT,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "Reading_pkey" PRIMARY KEY ("id")
 );
@@ -50,4 +58,7 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 ALTER TABLE "Run" ADD CONSTRAINT "Run_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Reading" ADD CONSTRAINT "Reading_runId_fkey" FOREIGN KEY ("runId") REFERENCES "Run"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Reading" ADD CONSTRAINT "Reading_runId_fkey" FOREIGN KEY ("runId") REFERENCES "Run"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Reading" ADD CONSTRAINT "Reading_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

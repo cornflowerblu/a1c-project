@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { Run, RunStatus, CreateRunDto, UpdateRunDto } from '@./api-interfaces';
+import { Run, CreateRunDto, UpdateRunDto } from '@./api-interfaces';
 import { validate as isUUID } from 'uuid';
 
 @Injectable()
@@ -22,19 +22,18 @@ export class RunsService {
           createdAt: 'desc',
         },
         include: {
-          readings: true,
+          glucoseReadings: true,
         },
       });
 
       // Map Prisma model to our interface and sanitize output
       return runs.map(run => ({
         id: run.id,
-        name: this.sanitizeOutput(run.notes) || 'Unnamed Run',
-        description: '',
-        status: RunStatus.PENDING,
+        startDate: run.startDate,
+        endDate: run.endDate || undefined,
+        estimatedA1C: run.estimatedA1C || undefined,
+        notes: this.sanitizeOutput(run.notes) || '',
         userId: run.userId,
-        startedAt: run.startDate,
-        completedAt: run.endDate || undefined,
         createdAt: run.createdAt,
         updatedAt: run.updatedAt
       }));
@@ -57,7 +56,7 @@ export class RunsService {
       const run = await this.prisma.run.findUnique({
         where: { id },
         include: {
-          readings: true,
+          glucoseReadings: true,
         },
       });
       
@@ -68,12 +67,11 @@ export class RunsService {
       // Map Prisma model to our interface and sanitize output
       return {
         id: run.id,
-        name: this.sanitizeOutput(run.notes) || 'Unnamed Run',
-        description: '',
-        status: RunStatus.PENDING,
+        startDate: run.startDate,
+        endDate: run.endDate || undefined,
+        estimatedA1C: run.estimatedA1C || undefined,
+        notes: this.sanitizeOutput(run.notes) || '',
         userId: run.userId,
-        startedAt: run.startDate,
-        completedAt: run.endDate || undefined,
         createdAt: run.createdAt,
         updatedAt: run.updatedAt
       };
@@ -91,14 +89,15 @@ export class RunsService {
     this.validateRunDto(createRunDto);
     
     // Sanitize input
-    const sanitizedName = this.sanitizeInput(createRunDto.name);
-    const sanitizedDescription = this.sanitizeInput(createRunDto.description || '');
+    const sanitizedNotes = this.sanitizeInput(createRunDto.notes || '');
     
     try {
       const run = await this.prisma.run.create({
         data: {
-          notes: sanitizedName || sanitizedDescription,
-          startDate: new Date(),
+          startDate: createRunDto.startDate || new Date(),
+          endDate: createRunDto.endDate,
+          estimatedA1C: createRunDto.estimatedA1C,
+          notes: sanitizedNotes,
           user: {
             connect: { id: createRunDto.userId },
           },
@@ -108,12 +107,11 @@ export class RunsService {
       // Map Prisma model to our interface
       return {
         id: run.id,
-        name: this.sanitizeOutput(run.notes) || 'Unnamed Run',
-        description: sanitizedDescription,
-        status: RunStatus.PENDING,
+        startDate: run.startDate,
+        endDate: run.endDate || undefined,
+        estimatedA1C: run.estimatedA1C || undefined,
+        notes: this.sanitizeOutput(run.notes) || '',
         userId: run.userId,
-        startedAt: run.startDate,
-        completedAt: run.endDate || undefined,
         createdAt: run.createdAt,
         updatedAt: run.updatedAt
       };
@@ -135,18 +133,20 @@ export class RunsService {
     // Prepare data for update
     const data: any = {};
     
-    if (updateRunDto.name || updateRunDto.description) {
-      const sanitizedName = this.sanitizeInput(updateRunDto.name || '');
-      const sanitizedDescription = this.sanitizeInput(updateRunDto.description || '');
-      data.notes = sanitizedName || sanitizedDescription;
+    if (updateRunDto.notes !== undefined) {
+      data.notes = this.sanitizeInput(updateRunDto.notes);
     }
     
-    if (updateRunDto.startedAt) {
-      data.startDate = updateRunDto.startedAt;
+    if (updateRunDto.startDate !== undefined) {
+      data.startDate = updateRunDto.startDate;
     }
     
-    if (updateRunDto.completedAt) {
-      data.endDate = updateRunDto.completedAt;
+    if (updateRunDto.endDate !== undefined) {
+      data.endDate = updateRunDto.endDate;
+    }
+    
+    if (updateRunDto.estimatedA1C !== undefined) {
+      data.estimatedA1C = updateRunDto.estimatedA1C;
     }
     
     try {
@@ -159,12 +159,11 @@ export class RunsService {
       // Map Prisma model to our interface
       return {
         id: run.id,
-        name: this.sanitizeOutput(run.notes) || 'Unnamed Run',
-        description: '',
-        status: updateRunDto.status || RunStatus.PENDING,
+        startDate: run.startDate,
+        endDate: run.endDate || undefined,
+        estimatedA1C: run.estimatedA1C || undefined,
+        notes: this.sanitizeOutput(run.notes) || '',
         userId: run.userId,
-        startedAt: run.startDate,
-        completedAt: run.endDate || undefined,
         createdAt: run.createdAt,
         updatedAt: run.updatedAt
       };
@@ -196,7 +195,7 @@ export class RunsService {
     }
   }
 
-  async startRun(id: string): Promise<Run> {
+  async completeRun(id: string): Promise<Run> {
     // Validate id is a UUID
     if (!isUUID(id)) {
       throw new BadRequestException('Invalid run ID format');
@@ -206,44 +205,14 @@ export class RunsService {
       // Check if run exists
       const run = await this.findOne(id);
       
-      // Only allow starting if the run is in PENDING status
-      if (run.status !== RunStatus.PENDING) {
-        throw new BadRequestException(`Run with ID ${id} cannot be started because it is in ${run.status} status`);
+      // Only allow completing if the run doesn't have an end date
+      if (run.endDate) {
+        throw new BadRequestException(`Run with ID ${id} is already completed`);
       }
       
-      // Update the run status and startedAt timestamp
+      // Update the run with an end date
       return this.update(id, {
-        status: RunStatus.RUNNING,
-        startedAt: new Date(),
-      });
-    } catch (error) {
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
-        throw error;
-      }
-      // Handle other errors without exposing details
-      throw new BadRequestException('Failed to start run');
-    }
-  }
-
-  async completeRun(id: string, success: boolean = true): Promise<Run> {
-    // Validate id is a UUID
-    if (!isUUID(id)) {
-      throw new BadRequestException('Invalid run ID format');
-    }
-    
-    try {
-      // Check if run exists
-      const run = await this.findOne(id);
-      
-      // Only allow completing if the run is in RUNNING status
-      if (run.status !== RunStatus.RUNNING) {
-        throw new BadRequestException(`Run with ID ${id} cannot be completed because it is in ${run.status} status`);
-      }
-      
-      // Update the run status and completedAt timestamp
-      return this.update(id, {
-        status: success ? RunStatus.COMPLETED : RunStatus.FAILED,
-        completedAt: new Date(),
+        endDate: new Date(),
       });
     } catch (error) {
       if (error instanceof BadRequestException || error instanceof NotFoundException) {
@@ -257,8 +226,8 @@ export class RunsService {
   // Helper methods for input validation and sanitization
   
   private validateRunDto(dto: CreateRunDto): void {
-    if (!dto.name || dto.name.trim() === '') {
-      throw new BadRequestException('Run name is required');
+    if (!dto.startDate) {
+      throw new BadRequestException('Start date is required');
     }
     
     if (!dto.userId || !isUUID(dto.userId)) {
@@ -272,7 +241,7 @@ export class RunsService {
     // Remove potentially dangerous characters
     return input
       .replace(/[<>]/g, '') // Remove HTML tags
-      .replace(/['"\\]/g, '') // Remove quotes and backslashes
+      .replace(/['\"\\\\]/g, '') // Remove quotes and backslashes
       .trim();
   }
   
@@ -284,7 +253,7 @@ export class RunsService {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+      .replace(/\"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
 }

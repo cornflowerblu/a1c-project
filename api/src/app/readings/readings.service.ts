@@ -8,7 +8,7 @@ export class ReadingsService {
   constructor(private prisma: PrismaService) {}
 
   // Implementation using Prisma for database access
-  async findAll(userId?: string, runId?: string): Promise<Reading[]> {
+  async findAll(userId?: string, glucoseRunId?: string): Promise<Reading[]> {
     const where: any = {};
     
     if (userId) {
@@ -17,18 +17,16 @@ export class ReadingsService {
         throw new BadRequestException('Invalid user ID format');
       }
       
-      where.run = {
-        userId
-      };
+      where.userId = userId;
     }
     
-    if (runId) {
-      // Validate runId is a UUID
-      if (!isUUID(runId)) {
+    if (glucoseRunId) {
+      // Validate glucoseRunId is a UUID
+      if (!isUUID(glucoseRunId)) {
         throw new BadRequestException('Invalid run ID format');
       }
       
-      where.runId = runId;
+      where.glucoseRunId = glucoseRunId;
     }
     
     const readings = await this.prisma.reading.findMany({
@@ -37,19 +35,20 @@ export class ReadingsService {
         timestamp: 'desc',
       },
       include: {
-        run: true
+        glucoseRun: true,
+        user: true
       }
     });
 
     // Map Prisma model to our interface and sanitize output
     return readings.map(reading => ({
       id: reading.id,
-      value: reading.glucoseValue,
+      glucoseValue: reading.glucoseValue,
       timestamp: reading.timestamp,
-      type: this.sanitizeOutput(reading.mealContext) || 'default',
+      mealContext: this.sanitizeOutput(reading.mealContext) || '',
       notes: this.sanitizeOutput(reading.notes) || '',
-      runId: reading.runId,
-      userId: reading.run?.userId || '',
+      glucoseRunId: reading.glucoseRunId,
+      userId: reading.userId,
       createdAt: reading.createdAt,
       updatedAt: reading.updatedAt
     }));
@@ -64,7 +63,8 @@ export class ReadingsService {
     const reading = await this.prisma.reading.findUnique({
       where: { id },
       include: {
-        run: true
+        glucoseRun: true,
+        user: true
       }
     });
     
@@ -75,12 +75,12 @@ export class ReadingsService {
     // Map Prisma model to our interface and sanitize output
     return {
       id: reading.id,
-      value: reading.glucoseValue,
+      glucoseValue: reading.glucoseValue,
       timestamp: reading.timestamp,
-      type: this.sanitizeOutput(reading.mealContext) || 'default',
+      mealContext: this.sanitizeOutput(reading.mealContext) || '',
       notes: this.sanitizeOutput(reading.notes) || '',
-      runId: reading.runId,
-      userId: reading.run?.userId || '',
+      glucoseRunId: reading.glucoseRunId,
+      userId: reading.userId,
       createdAt: reading.createdAt,
       updatedAt: reading.updatedAt
     };
@@ -92,33 +92,37 @@ export class ReadingsService {
     
     // Sanitize input
     const sanitizedNotes = this.sanitizeInput(createReadingDto.notes || '');
-    const sanitizedType = this.sanitizeInput(createReadingDto.type);
+    const sanitizedMealContext = this.sanitizeInput(createReadingDto.mealContext || '');
     
     try {
       const reading = await this.prisma.reading.create({
         data: {
-          glucoseValue: createReadingDto.value,
-          mealContext: sanitizedType,
-          timestamp: new Date(),
+          glucoseValue: createReadingDto.glucoseValue,
+          mealContext: sanitizedMealContext,
+          timestamp: createReadingDto.timestamp || new Date(),
           notes: sanitizedNotes,
-          run: {
-            connect: { id: createReadingDto.runId }
+          glucoseRun: {
+            connect: { id: createReadingDto.glucoseRunId }
+          },
+          user: {
+            connect: { id: createReadingDto.userId }
           }
         },
         include: {
-          run: true
+          glucoseRun: true,
+          user: true
         }
       });
 
       // Map Prisma model to our interface
       return {
         id: reading.id,
-        value: reading.glucoseValue,
+        glucoseValue: reading.glucoseValue,
         timestamp: reading.timestamp,
-        type: this.sanitizeOutput(reading.mealContext) || 'default',
+        mealContext: this.sanitizeOutput(reading.mealContext) || '',
         notes: this.sanitizeOutput(reading.notes) || '',
-        runId: reading.runId,
-        userId: reading.run?.userId || createReadingDto.userId,
+        glucoseRunId: reading.glucoseRunId,
+        userId: reading.userId,
         createdAt: reading.createdAt,
         updatedAt: reading.updatedAt
       };
@@ -135,7 +139,7 @@ export class ReadingsService {
     }
     
     // Validate input
-    if (updateReadingDto.value !== undefined && (isNaN(updateReadingDto.value) || updateReadingDto.value < 0)) {
+    if (updateReadingDto.glucoseValue !== undefined && (isNaN(updateReadingDto.glucoseValue) || updateReadingDto.glucoseValue < 0)) {
       throw new BadRequestException('Reading value must be a positive number');
     }
     
@@ -145,29 +149,33 @@ export class ReadingsService {
     // Prepare data for update
     const data: any = {};
     
-    if (updateReadingDto.value !== undefined) {
-      data.glucoseValue = updateReadingDto.value;
+    if (updateReadingDto.glucoseValue !== undefined) {
+      data.glucoseValue = updateReadingDto.glucoseValue;
     }
     
-    if (updateReadingDto.type !== undefined) {
-      data.mealContext = this.sanitizeInput(updateReadingDto.type);
+    if (updateReadingDto.mealContext !== undefined) {
+      data.mealContext = this.sanitizeInput(updateReadingDto.mealContext);
+    }
+    
+    if (updateReadingDto.timestamp !== undefined) {
+      data.timestamp = updateReadingDto.timestamp;
     }
     
     if (updateReadingDto.notes !== undefined) {
       data.notes = this.sanitizeInput(updateReadingDto.notes);
     }
     
-    // Handle run relation
-    if (updateReadingDto.runId !== undefined) {
-      if (updateReadingDto.runId) {
-        // Validate runId is a UUID
-        if (!isUUID(updateReadingDto.runId)) {
+    // Handle glucoseRun relation
+    if (updateReadingDto.glucoseRunId !== undefined) {
+      if (updateReadingDto.glucoseRunId) {
+        // Validate glucoseRunId is a UUID
+        if (!isUUID(updateReadingDto.glucoseRunId)) {
           throw new BadRequestException('Invalid run ID format');
         }
         
-        data.run = { connect: { id: updateReadingDto.runId } };
+        data.glucoseRun = { connect: { id: updateReadingDto.glucoseRunId } };
       } else {
-        data.run = { disconnect: true };
+        data.glucoseRun = { disconnect: true };
       }
     }
     
@@ -177,19 +185,20 @@ export class ReadingsService {
         where: { id },
         data,
         include: {
-          run: true
+          glucoseRun: true,
+          user: true
         }
       });
 
       // Map Prisma model to our interface
       return {
         id: reading.id,
-        value: reading.glucoseValue,
+        glucoseValue: reading.glucoseValue,
         timestamp: reading.timestamp,
-        type: this.sanitizeOutput(reading.mealContext) || 'default',
+        mealContext: this.sanitizeOutput(reading.mealContext) || '',
         notes: this.sanitizeOutput(reading.notes) || '',
-        runId: reading.runId,
-        userId: reading.run?.userId || '',
+        glucoseRunId: reading.glucoseRunId,
+        userId: reading.userId,
         createdAt: reading.createdAt,
         updatedAt: reading.updatedAt
       };
@@ -221,22 +230,20 @@ export class ReadingsService {
     }
   }
 
-  async getStatistics(userId: string, type?: string): Promise<{ min: number; max: number; avg: number; count: number }> {
+  async getStatistics(userId: string, mealContext?: string): Promise<{ min: number; max: number; avg: number; count: number }> {
     // Validate userId is a UUID
     if (!isUUID(userId)) {
       throw new BadRequestException('Invalid user ID format');
     }
     
-    // Sanitize type if provided
-    const sanitizedType = type ? this.sanitizeInput(type) : undefined;
+    // Sanitize mealContext if provided
+    const sanitizedMealContext = mealContext ? this.sanitizeInput(mealContext) : undefined;
     
     // Use Prisma's safe query methods instead of raw SQL
     const readings = await this.prisma.reading.findMany({
       where: {
-        run: {
-          userId: userId,
-          ...(sanitizedType && { mealContext: sanitizedType })
-        }
+        userId: userId,
+        ...(sanitizedMealContext && { mealContext: sanitizedMealContext })
       },
       select: {
         glucoseValue: true
@@ -260,15 +267,15 @@ export class ReadingsService {
   // Helper methods for input validation and sanitization
   
   private validateReadingDto(dto: CreateReadingDto): void {
-    if (isNaN(dto.value) || dto.value < 0) {
+    if (isNaN(dto.glucoseValue) || dto.glucoseValue < 0) {
       throw new BadRequestException('Reading value must be a positive number');
     }
     
-    if (!dto.type || dto.type.trim() === '') {
-      throw new BadRequestException('Reading type is required');
+    if (!dto.timestamp) {
+      throw new BadRequestException('Timestamp is required');
     }
     
-    if (dto.runId && !isUUID(dto.runId)) {
+    if (!dto.glucoseRunId || !isUUID(dto.glucoseRunId)) {
       throw new BadRequestException('Invalid run ID format');
     }
     
@@ -283,7 +290,7 @@ export class ReadingsService {
     // Remove potentially dangerous characters
     return input
       .replace(/[<>]/g, '') // Remove HTML tags
-      .replace(/['"\\]/g, '') // Remove quotes and backslashes
+      .replace(/['\"\\\\]/g, '') // Remove quotes and backslashes
       .trim();
   }
   
@@ -295,7 +302,7 @@ export class ReadingsService {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+      .replace(/\"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
 }

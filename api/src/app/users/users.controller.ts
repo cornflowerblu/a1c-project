@@ -67,7 +67,6 @@ export class UsersController {
       return await this.usersService.create(
         createUserDto.email,
         createUserDto.name,
-        createUserDto.password,
         createUserDto.role
       );
     } catch (error) {

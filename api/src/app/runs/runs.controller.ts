@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { RunsService } from './runs.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateRunDto, UpdateRunDto, RunStatus } from '@./api-interfaces';
+import { CreateRunDto, UpdateRunDto } from '@./api-interfaces';
 
 @Controller('runs')
 export class RunsController {
@@ -85,26 +85,12 @@ export class RunsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post(':id/start')
-  async startRun(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    try {
-      return await this.runsService.startRun(id);
-    } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Failed to start run');
-    }
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Post(':id/complete')
   async completeRun(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body('success') success: boolean = true,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string
   ) {
     try {
-      return await this.runsService.completeRun(id, success);
+      return await this.runsService.completeRun(id);
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;

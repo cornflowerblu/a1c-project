@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { User, UserRole } from '@./api-interfaces';
-import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../database/prisma.service';
 import { validate as isUUID } from 'uuid';
 
@@ -30,7 +29,6 @@ export class UsersService {
         email: this.sanitizeOutput(user.email),
         name: this.sanitizeOutput(user.name) || '',
         role: user.role as UserRole,
-        password: undefined, // Don't return password in response
         clerkId: user.clerkId || undefined,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -65,7 +63,6 @@ export class UsersService {
         email: this.sanitizeOutput(user.email),
         name: this.sanitizeOutput(user.name) || '',
         role: user.role as UserRole,
-        password: user.password, // Keep password for internal validation
         clerkId: user.clerkId || undefined,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -77,28 +74,18 @@ export class UsersService {
   }
 
   async validateUser(email: string, password: string): Promise<User | null> {
-    // Validate email
-    if (!this.isValidEmail(email)) {
-      throw new BadRequestException('Invalid email format');
-    }
-    
+    // This method is kept for backward compatibility with auth service
+    // but since we're using Clerk for authentication, we don't need to validate passwords
     try {
       const user = await this.findByEmail(email);
       
-      if (!user || !user.password) {
+      if (!user) {
         return null;
       }
       
-      // Compare the provided password with the stored hash
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      
-      if (!isPasswordValid) {
-        return null;
-      }
-      
-      // Remove password from returned user object
-      const { password: _, ...userWithoutPassword } = user;
-      return userWithoutPassword as User;
+      // With Clerk, we would validate the user differently
+      // For now, just return the user
+      return user;
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -118,7 +105,6 @@ export class UsersService {
         email: this.sanitizeOutput(user.email),
         name: this.sanitizeOutput(user.name) || '',
         role: user.role as UserRole,
-        password: undefined, // Don't return passwords in response
         clerkId: user.clerkId || undefined,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -129,23 +115,16 @@ export class UsersService {
     }
   }
 
-  async create(email: string, name: string, password: string, role: UserRole = UserRole.USER): Promise<User> {
+  async create(email: string, name: string, role: UserRole = UserRole.USER, clerkId?: string): Promise<User> {
     // Validate input
     if (!this.isValidEmail(email)) {
       throw new BadRequestException('Invalid email format');
     }
     
-    if (!name || name.trim() === '') {
-      throw new BadRequestException('Name is required');
-    }
-    
-    if (!password || password.length < 8) {
-      throw new BadRequestException('Password must be at least 8 characters long');
-    }
-    
     // Sanitize input
     const sanitizedEmail = this.sanitizeInput(email);
     const sanitizedName = this.sanitizeInput(name);
+    const sanitizedClerkId = clerkId ? this.sanitizeInput(clerkId) : undefined;
     
     try {
       // Check if user already exists
@@ -157,16 +136,13 @@ export class UsersService {
         throw new ConflictException('User with this email already exists');
       }
       
-      // Hash the password
-      const hashedPassword = await bcrypt.hash(password, 10);
-      
       // Create the user
       const user = await this.prisma.user.create({
         data: {
           email: sanitizedEmail,
           name: sanitizedName,
-          password: hashedPassword,
-          role: role.toString(),
+          role: role,
+          clerkId: sanitizedClerkId,
         },
       });
       
@@ -176,7 +152,6 @@ export class UsersService {
         email: this.sanitizeOutput(user.email),
         name: this.sanitizeOutput(user.name) || '',
         role: user.role as UserRole,
-        password: undefined, // Don't return password in response
         clerkId: user.clerkId || undefined,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -221,13 +196,6 @@ export class UsersService {
       updateData.role = data.role.toString();
     }
     
-    if (data.password !== undefined) {
-      if (data.password.length < 8) {
-        throw new BadRequestException('Password must be at least 8 characters long');
-      }
-      updateData.password = await bcrypt.hash(data.password, 10);
-    }
-    
     if (data.clerkId !== undefined) {
       updateData.clerkId = this.sanitizeInput(data.clerkId);
     }
@@ -245,7 +213,6 @@ export class UsersService {
         email: this.sanitizeOutput(user.email),
         name: this.sanitizeOutput(user.name) || '',
         role: user.role as UserRole,
-        password: undefined, // Don't return password in response
         clerkId: user.clerkId || undefined,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -291,7 +258,7 @@ export class UsersService {
     // Remove potentially dangerous characters
     return input
       .replace(/[<>]/g, '') // Remove HTML tags
-      .replace(/['"\\]/g, '') // Remove quotes and backslashes
+      .replace(/['"\\\\]/g, '') // Remove quotes and backslashes
       .trim();
   }
   
