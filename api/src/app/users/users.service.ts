@@ -141,7 +141,7 @@ export class UsersService {
         data: {
           email: sanitizedEmail,
           name: sanitizedName,
-          role: role.toString(),
+          role: role,
           clerkId: sanitizedClerkId,
         },
       });
@@ -258,7 +258,7 @@ export class UsersService {
     // Remove potentially dangerous characters
     return input
       .replace(/[<>]/g, '') // Remove HTML tags
-      .replace(/['\"\\\\]/g, '') // Remove quotes and backslashes
+      .replace(/['"\\\\]/g, '') // Remove quotes and backslashes
       .trim();
   }
   
@@ -270,7 +270,7 @@ export class UsersService {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/\"/g, '&quot;')
+      .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
 }
