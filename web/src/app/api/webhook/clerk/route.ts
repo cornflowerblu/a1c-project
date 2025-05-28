@@ -82,31 +82,22 @@ if (!svix_id || !svix_timestamp || !svix_signature) {
     console.log(`User created: ${id}, ${email_addresses[0]?.email_address}, ${first_name} ${last_name}`);
     
     // You could make an API call to your backend to create the user
-    try {
-      // Example API call (commented out)
-      // await fetch(`${process.env.API_URL}/users`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     id,
-      //     email: email_addresses[0]?.email_address,
-      //     name: `${first_name || ''} ${last_name || ''}`.trim(),
-      //   }),
-      // });
-//   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     id,
-      //     email: email_addresses[0]?.email_address,
-      //     name: `${first_name || ''} ${last_name || ''}`.trim(),
-      //   }),
-      // });
-    } catch (error) {
-      console.error('Error syncing user to database:', error);
-      // TODO: Implement retry logic or admin notification
-    }
-    return new Response('Webhook received', { status: 200 });
+   try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/webhook/clerk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: eventType,
+        data: evt.data
+      }),
+    });
+    
+    return new Response('Webhook received and queued', { status: 200 });
+  } catch (error) {
+    console.error('Error sending event to queue:', error);
+    return new Response('Error processing webhook', { status: 500 });
   }
+}
   
   // Handle user Update
   if (eventType === 'user.updated') {
