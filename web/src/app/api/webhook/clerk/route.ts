@@ -2,31 +2,7 @@ import { WebhookEvent } from '@clerk/nextjs/server';
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
 
-
 export async function POST(req: Request) {
-
-  // Handle OPTIONS request (preflight)
-  
-    if (req.method === 'OPTIONS') {
-      const options = await OPTIONS();
-      const headers = await handleHeaders();
-        if (!headers.svix_id || !headers.svix_signature || !headers.svix_timestamp) {
-    return new Response('Error: Missing svix headers', {
-      status: 400,
-    });
-  }
-      return {
-        ...options,
-        headers: {
-          ...options.headers,
-          ...headers,
-        },
-      }
-    }
-
-
-
-
   // Get the body
   const payload = await req.json();
   const body = JSON.stringify(payload);
@@ -44,18 +20,18 @@ export async function POST(req: Request) {
 
   let evt: WebhookEvent;
 
+  // Get headers
   const headersList = await headers();
   const svix_id = headersList.get('svix-id');
   const svix_timestamp = headersList.get('svix-timestamp');
   const svix_signature = headersList.get('svix-signature');
 
-// If there are no headers, error out
-if (!svix_id || !svix_timestamp || !svix_signature) {
-  return new Response('Error: Missing svix headers', {
-    status: 400,
-  });
-}
-
+  // If there are no headers, error out
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return new Response('Error: Missing svix headers', {
+      status: 400,
+    });
+  }
 
   // Verify the webhook payload
   try {
@@ -138,10 +114,17 @@ if (!svix_id || !svix_timestamp || !svix_signature) {
     }    
     return new Response('Webhook received', { status: 200 });
   }
+  
+  // Default response for unhandled event types
+  return new Response('Webhook received', { status: 200 });
 }
 
- export async function OPTIONS() {
-  return new Response('Options receveid', {
+// Next.js will automatically handle OPTIONS requests for CORS preflight
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
+export async function OPTIONS() {
+  return new Response('Options received', {
     status: 201,
     headers: {
       'Access-Control-Allow-Origin': '*',
@@ -149,20 +132,4 @@ if (!svix_id || !svix_timestamp || !svix_signature) {
       'Access-Control-Allow-Headers': 'Content-Type, svix-id, svix-timestamp, svix-signature',
     }     
   });
-}
-
-export async function handleHeaders() {
-  const headersList = await headers();
-  
-  // Create an object with the values we want to destructure
-  const headerPayload = {
-    svix_id: headersList.get('svix-id'),
-    svix_timestamp: headersList.get('svix-timestamp'),
-    svix_signature: headersList.get('svix-signature')
-  };
-  
-  // Now we can destructure from this object
-  const { svix_id, svix_timestamp, svix_signature } = headerPayload;
-  
-  return { svix_id, svix_timestamp, svix_signature };
 }

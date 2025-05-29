@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: a1c-project-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/yourusername/a1c-project.git  # Replace with your actual Git repository URL
+    targetRevision: HEAD
+    path: deployment/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: a1c-project-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true

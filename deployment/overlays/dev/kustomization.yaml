@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+- namespace.yaml
+
+namespace: a1c-project-dev
+
+namePrefix: dev-
+
+commonLabels:
+  environment: dev
+
+patches:
+- path: patches/web-deployment-patch.yaml
+- path: patches/api-deployment-patch.yaml
+
+secretGenerator:
+- name: postgres-secrets
+  literals:
+  - postgres-password=postgres
+- name: redis-secrets
+  literals:
+  - redis-password=redispassword
+- name: api-secrets
+  literals:
+  - jwt-secret=your-secret-key-change-this-in-production
+- name: web-secrets
+  literals:
+  - clerk-publishable-key=pk_test_bW9kZXN0LWtpdGUtOS5jbGVyay5hY2NvdW50cy5kZXYk
+  - clerk-secret-key=sk_test_kTGxXzq898ZPWUOEAb6Yvv2xdBfqANlckeHrm6pLUp

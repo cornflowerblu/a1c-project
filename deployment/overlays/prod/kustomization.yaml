@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+- namespace.yaml
+
+namespace: a1c-project-prod
+
+namePrefix: prod-
+
+commonLabels:
+  environment: prod
+
+patches:
+- path: patches/web-deployment-patch.yaml
+- path: patches/api-deployment-patch.yaml
+
+# In production, we would use sealed secrets instead of secretGenerator
+# This is just a placeholder for the POC
+secretGenerator:
+- name: postgres-secrets
+  literals:
+  - postgres-password=prod-postgres-password
+- name: redis-secrets
+  literals:
+  - redis-password=prod-redis-password
+- name: api-secrets
+  literals:
+  - jwt-secret=prod-jwt-secret
+- name: web-secrets
+  literals:
+  - clerk-publishable-key=prod-clerk-publishable-key
+  - clerk-secret-key=prod-clerk-secret-key

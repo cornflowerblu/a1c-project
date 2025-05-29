@@ -4,6 +4,9 @@ import React from 'react';
 import ProtectedRoute from '../../components/protected-route';
 import A1CCalculator from '../../components/a1c-calculator';
 
+// Force dynamic rendering to avoid prerender issues with environment variables
+export const dynamic = 'force-dynamic';
+
 export default function A1CEstimatorPage() {
   return (
     <ProtectedRoute>

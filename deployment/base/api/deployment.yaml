@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: a1c-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3333
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: API_PORT
+          value: "3333"
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: API_PREFIX
+          value: api
+        - name: DATABASE_URL
+          value: postgresql://postgres:postgres@postgres:5432/a1c_project
+        - name: FRONTEND_URL
+          value: http://web
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: jwt-secret
+        - name: JWT_EXPIRATION
+          value: 1d
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3333
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3333
+          initialDelaySeconds: 5
+          periodSeconds: 5
